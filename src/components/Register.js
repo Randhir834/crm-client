@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getApiUrl } from '../config/api';
 import './Auth.css';
 
 const Register = () => {
@@ -29,7 +30,7 @@ const Register = () => {
 
   const checkIfFirstUser = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/check-first-user');
+      const response = await fetch(getApiUrl('api/auth/check-first-user'));
       if (response.ok) {
         const data = await response.json();
         setIsFirstUser(data.isFirstUser);

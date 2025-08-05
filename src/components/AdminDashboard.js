@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
+import { getApiUrl } from '../config/api';
 import './Dashboard.css';
 
 const AdminDashboard = () => {
@@ -38,7 +40,7 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('token');
       
       // Fetch system stats
-      const statsResponse = await fetch('http://localhost:5001/api/auth/stats', {
+      const statsResponse = await fetch(getApiUrl('api/auth/stats'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -59,7 +61,7 @@ const AdminDashboard = () => {
       }
 
       // Fetch all users
-      const usersResponse = await fetch('http://localhost:5001/api/auth/users', {
+      const usersResponse = await fetch(getApiUrl('api/auth/users'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -85,7 +87,7 @@ const AdminDashboard = () => {
     try {
       setUpdatingUser(userId);
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/auth/users/${userId}/role`, {
+      const response = await fetch(getApiUrl(`api/auth/users/${userId}/role`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

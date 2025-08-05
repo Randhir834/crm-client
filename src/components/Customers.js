@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
-import './Dashboard.css';
+import { getApiUrl } from '../config/api';
+import './Customers.css';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
@@ -21,7 +23,7 @@ const Customers = () => {
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/customers', {
+      const response = await fetch(getApiUrl('api/customers'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -52,7 +54,7 @@ const Customers = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/customers', {
+      const response = await fetch(getApiUrl('api/customers'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +94,7 @@ const Customers = () => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5001/api/customers/${customerId}`, {
+        const response = await fetch(getApiUrl(`api/customers/${customerId}`), {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -140,7 +142,7 @@ const Customers = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/customers/${editingCustomer._id}`, {
+      const response = await fetch(getApiUrl(`api/customers/${editingCustomer._id}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -172,7 +174,7 @@ const Customers = () => {
   const handleStatusChange = async (customerId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/customers/${customerId}`, {
+      const response = await fetch(getApiUrl(`api/customers/${customerId}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

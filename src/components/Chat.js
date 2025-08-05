@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
+import { getApiUrl } from '../config/api';
 import './Dashboard.css';
 
 const Chat = () => {
@@ -24,7 +26,7 @@ const Chat = () => {
     try {
       console.log('📋 Fetching chats...');
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/chats', {
+      const response = await fetch(getApiUrl('api/chats'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -65,7 +67,7 @@ const Chat = () => {
       
       // Then fetch fresh data from server
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/chats/${chatId}`, {
+      const response = await fetch(getApiUrl(`api/chats/${chatId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -113,7 +115,7 @@ const Chat = () => {
     setSending(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/chats/${selectedChat._id}/messages`, {
+      const response = await fetch(getApiUrl(`api/chats/${selectedChat._id}/messages`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -155,7 +157,7 @@ const Chat = () => {
   const getChatForCallSchedule = async (callScheduleId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/chats/call-schedule/${callScheduleId}`, {
+      const response = await fetch(getApiUrl(`api/chats/call-schedule/${callScheduleId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -194,7 +196,7 @@ const Chat = () => {
     setDeleting(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/chats/${chatToDelete._id}`, {
+      const response = await fetch(getApiUrl(`api/chats/${chatToDelete._id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 import './Dashboard.css';
 import axios from 'axios';
+import { getApiUrl } from '../config/api';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -120,32 +121,32 @@ const Dashboard = () => {
       console.log('Fetching dashboard data...');
 
       // Fetch leads statistics
-      const leadsStatsResponse = await axios.get('http://localhost:5001/api/leads/stats', {
+      const leadsStatsResponse = await axios.get(getApiUrl('api/leads/stats'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Fetch all leads for activity feed
-      const leadsResponse = await axios.get('http://localhost:5001/api/leads?limit=1000', {
+      const leadsResponse = await axios.get(getApiUrl('api/leads?limit=1000'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Fetch call schedules statistics
-      const callsStatsResponse = await axios.get('http://localhost:5001/api/call-schedules/stats', {
+      const callsStatsResponse = await axios.get(getApiUrl('api/call-schedules/stats'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Fetch all call schedules for activity feed
-      const callsResponse = await axios.get('http://localhost:5001/api/call-schedules', {
+      const callsResponse = await axios.get(getApiUrl('api/call-schedules'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Fetch customers statistics
-      const customersStatsResponse = await axios.get('http://localhost:5001/api/customers/stats', {
+      const customersStatsResponse = await axios.get(getApiUrl('api/customers/stats'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       // Fetch all customers for activity feed
-      const customersResponse = await axios.get('http://localhost:5001/api/customers', {
+      const customersResponse = await axios.get(getApiUrl('api/customers'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -423,7 +424,7 @@ const Dashboard = () => {
         
 
         
-        const response = await axios.get('http://localhost:5001/api/sessions/stats', {
+        const response = await axios.get(getApiUrl('api/sessions/stats'), {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -487,7 +488,7 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        const response = await axios.get('http://localhost:5001/api/sessions/updates', {
+        const response = await axios.get(getApiUrl('api/sessions/updates'), {
           headers: { Authorization: `Bearer ${token}` }
         });
         

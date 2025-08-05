@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from './Layout';
 import { useAuth } from '../context/AuthContext';
+import { getApiUrl } from '../config/api';
 import './Dashboard.css';
 
 const Leads = () => {
@@ -36,7 +37,7 @@ const Leads = () => {
     try {
       const token = localStorage.getItem('token');
       // Fetch all leads without pagination to show all data
-      const response = await fetch('http://localhost:5001/api/leads?limit=1000', {
+      const response = await fetch(getApiUrl('api/leads?limit=1000'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -86,7 +87,7 @@ const Leads = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/leads/stats', {
+      const response = await fetch(getApiUrl('api/leads/stats'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -230,7 +231,7 @@ const Leads = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/leads/upload', {
+      const response = await fetch(getApiUrl('api/leads/upload'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -309,7 +310,7 @@ const Leads = () => {
   const handleExport = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/leads/export/excel', {
+      const response = await fetch(getApiUrl('api/leads/export/excel'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -344,7 +345,7 @@ const Leads = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/leads/${leadId}`, {
+      const response = await fetch(getApiUrl(`api/leads/${leadId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -365,7 +366,7 @@ const Leads = () => {
         await fetchLeads(true);
         
         // Update stats without full refresh
-        const statsResponse = await fetch('http://localhost:5001/api/leads/stats', {
+        const statsResponse = await fetch(getApiUrl('api/leads/stats'), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -406,7 +407,7 @@ const Leads = () => {
       setProcessingLead(leadId);
       console.log(`Processing lead ${leadId}: ${newStatus}`);
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/leads/${leadId}/status`, {
+      const response = await fetch(getApiUrl(`api/leads/${leadId}/status`), {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -453,7 +454,7 @@ const Leads = () => {
         });
 
         // Update stats immediately
-        const statsResponse = await fetch('http://localhost:5001/api/leads/stats', {
+        const statsResponse = await fetch(getApiUrl('api/leads/stats'), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -526,7 +527,7 @@ const Leads = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/leads/${editingLead._id}`, {
+      const response = await fetch(getApiUrl(`api/leads/${editingLead._id}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

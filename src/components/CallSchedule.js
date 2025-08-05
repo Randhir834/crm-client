@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
+import { getApiUrl } from '../config/api';
 import './Dashboard.css';
 
 const CallSchedule = () => {
@@ -24,7 +26,7 @@ const CallSchedule = () => {
       const token = localStorage.getItem('token');
       
       // Fetch leads - request all leads without pagination
-      const leadsResponse = await fetch('http://localhost:5001/api/leads?limit=10000', {
+      const leadsResponse = await fetch(getApiUrl('api/leads?limit=10000'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -32,7 +34,7 @@ const CallSchedule = () => {
       });
 
       // Fetch call schedules
-      const schedulesResponse = await fetch('http://localhost:5001/api/call-schedules', {
+      const schedulesResponse = await fetch(getApiUrl('api/call-schedules'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -125,7 +127,7 @@ const CallSchedule = () => {
       const token = localStorage.getItem('token');
       console.log('Submitting schedule form:', scheduleForm);
       
-      const response = await fetch('http://localhost:5001/api/call-schedules', {
+      const response = await fetch(getApiUrl('api/call-schedules'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -166,7 +168,7 @@ const CallSchedule = () => {
       const token = localStorage.getItem('token');
       console.log('Deleting call schedule:', scheduleId);
       
-      const response = await fetch(`http://localhost:5001/api/call-schedules/${scheduleId}`, {
+      const response = await fetch(getApiUrl(`api/call-schedules/${scheduleId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -229,7 +231,7 @@ const CallSchedule = () => {
       // Try to load existing messages from backend
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5001/api/chats/call-schedule/${scheduleId}`, {
+        const response = await fetch(getApiUrl(`api/chats/call-schedule/${scheduleId}`), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -270,7 +272,7 @@ const CallSchedule = () => {
       }
 
       // Create or get chat
-      const createChatResponse = await fetch('http://localhost:5001/api/chats', {
+      const createChatResponse = await fetch(getApiUrl('api/chats'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -289,7 +291,7 @@ const CallSchedule = () => {
         chatId = chatData.chat._id;
       } else {
         // Try to get existing chat
-        const getChatResponse = await fetch(`http://localhost:5001/api/chats/call-schedule/${schedule._id}`, {
+        const getChatResponse = await fetch(getApiUrl(`api/chats/call-schedule/${schedule._id}`), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -305,7 +307,7 @@ const CallSchedule = () => {
       }
 
       // Send the message
-      const sendMessageResponse = await fetch(`http://localhost:5001/api/chats/${chatId}/messages`, {
+      const sendMessageResponse = await fetch(getApiUrl(`api/chats/${chatId}/messages`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -321,7 +323,7 @@ const CallSchedule = () => {
         const messageData = await sendMessageResponse.json();
         
         // Get the updated chat with all messages
-        const getUpdatedChatResponse = await fetch(`http://localhost:5001/api/chats/${chatId}`, {
+        const getUpdatedChatResponse = await fetch(getApiUrl(`api/chats/${chatId}`), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
