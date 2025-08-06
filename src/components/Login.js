@@ -99,168 +99,140 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-background">
-        <div className="auth-background-overlay"></div>
-        <div className="auth-background-pattern"></div>
-        
-        {/* Floating circles */}
-        <div className="floating-circle-1"></div>
-        <div className="floating-circle-2"></div>
-        <div className="floating-circle-3"></div>
-        
-        {/* Animated particles */}
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        <div className="particle"></div>
-        
-        {/* Geometric shapes */}
-        <div className="geometric-shape triangle"></div>
-        <div className="geometric-shape square"></div>
-        <div className="geometric-shape hexagon"></div>
-        
-        {/* Wave effects */}
-        <div className="wave"></div>
-        <div className="wave"></div>
-      </div>
-      
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <div className="logo-icon">
-              <img 
-                src={logoImage} 
-                alt="Innovatiq Media CRM Logo" 
-                className="auth-logo-image"
-                onLoad={() => console.log('Logo image loaded successfully')}
-                onError={(e) => {
-                  console.log('Logo image failed to load');
-                  console.log('Image src:', e.target.src);
-                }}
-              />
-            </div>
+    <div className="login-two-column-container">
+      <div className="login-left">
+        <div className="login-left-center">
+          <div style={{display: 'flex', justifyContent: 'center', marginBottom: 24}}>
+            <svg width="64" height="64" viewBox="0 0 64 64" className="animated-svg-logo-dark">
+              <g>
+                {/* Lock body */}
+                <rect x="16" y="28" width="32" height="24" rx="6" fill="#23272f" stroke="#111827" strokeWidth="3" />
+                {/* Lock shackle */}
+                <path d="M24 28v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#0ea5e9" strokeWidth="4">
+                  <animate attributeName="d" values="M24 28v-6a8 8 0 0 1 16 0v6;M24 28v-10a8 8 0 0 1 16 0v10;M24 28v-6a8 8 0 0 1 16 0v6" dur="1.6s" repeatCount="indefinite" />
+                </path>
+                {/* Keyhole */}
+                <circle cx="32" cy="40" r="3" fill="#0ea5e9">
+                  <animate attributeName="r" values="3;5;3" dur="1.6s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            </svg>
           </div>
-          <h2>Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to your account to continue</p>
+          <h2 style={{ textAlign: 'center', width: '100%' }}>Welcome Back</h2>
+          <p className="auth-subtitle" style={{ textAlign: 'center', width: '100%', marginBottom: 32 }}>
+            Sign in to your account
+          </p>
+          {error && (
+            <div className="error-message">
+              <div className="error-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+              </div>
+              <span>{error}</span>
+              {error.includes('password') && (
+                <div className="password-help">
+                  <p>💡 Tips:</p>
+                  <ul>
+                    <li>Check if Caps Lock is on</li>
+                    <li>Make sure you're using the correct password</li>
+                    <li>Try using the "Forgot password?" link below</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="auth-form" onClick={() => console.log('Form clicked')}>
+            <div className="form-group">
+              <label htmlFor="email">
+                <div className="label-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                </div>
+                Email Address
+              </label>
+              <div className="input-wrapper">
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={errors.email ? 'error' : ''}
+                  placeholder="Enter your email address"
+                />
+                <div className="input-border"></div>
+              </div>
+              {errors.email && <span className="error-text">{errors.email}</span>}
+            </div>
+            <div className="form-group">
+              <label htmlFor="password">
+                <div className="label-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                  </svg>
+                </div>
+                Password
+              </label>
+              <div className="input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`${errors.password ? 'error' : ''} ${error && error.includes('password') ? 'shake' : ''}`}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    {showPassword ? (
+                      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                    ) : (
+                      <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+                    )}
+                  </svg>
+                </button>
+                <div className="input-border"></div>
+              </div>
+              {errors.password && <span className="error-text">{errors.password}</span>}
+            </div>
+            <div className="form-options">
+              <Link to="/forgot-password" className="forgot-password">
+                Forgot password?
+              </Link>
+            </div>
+            <button 
+              type="submit" 
+              className="auth-button"
+              disabled={isSubmitting}
+              onClick={() => console.log('Login button clicked')}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="spinner"></div>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/>
+                  </svg>
+                  Sign In
+                </>
+              )}
+            </button>
+          </form>
         </div>
-
-        {error && (
-          <div className="error-message">
-            <div className="error-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-              </svg>
-            </div>
-            <span>{error}</span>
-            {error.includes('password') && (
-              <div className="password-help">
-                <p>💡 Tips:</p>
-                <ul>
-                  <li>Check if Caps Lock is on</li>
-                  <li>Make sure you're using the correct password</li>
-                  <li>Try using the "Forgot password?" link below</li>
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="auth-form" onClick={() => console.log('Form clicked')}>
-          <div className="form-group">
-            <label htmlFor="email">
-              <div className="label-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                </svg>
-              </div>
-              Email Address
-            </label>
-            <div className="input-wrapper">
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={errors.email ? 'error' : ''}
-                placeholder="Enter your email address"
-              />
-              <div className="input-border"></div>
-            </div>
-            {errors.email && <span className="error-text">{errors.email}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">
-              <div className="label-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                </svg>
-              </div>
-              Password
-            </label>
-            <div className="input-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`${errors.password ? 'error' : ''} ${error && error.includes('password') ? 'shake' : ''}`}
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  {showPassword ? (
-                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                  ) : (
-                    <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
-                  )}
-                </svg>
-              </button>
-              <div className="input-border"></div>
-            </div>
-            {errors.password && <span className="error-text">{errors.password}</span>}
-          </div>
-
-          <div className="form-options">
-            <Link to="/forgot-password" className="forgot-password">
-              Forgot password?
-            </Link>
-          </div>
-
-          <button 
-            type="submit" 
-            className="auth-button"
-            disabled={isSubmitting}
-            onClick={() => console.log('Login button clicked')}
-          >
-            {isSubmitting ? (
-              <>
-                <div className="spinner"></div>
-                Signing in...
-              </>
-            ) : (
-              <>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/>
-                </svg>
-                Sign In
-              </>
-            )}
-          </button>
-        </form>
-
-
+      </div>
+      <div className="login-right">
+        {/* Replace the src below with your animation or image */}
+        <img src="/logo192.png" alt="Login Visual" className="login-animation-image" />
       </div>
     </div>
   );

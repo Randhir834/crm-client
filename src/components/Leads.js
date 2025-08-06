@@ -267,7 +267,8 @@ const Leads = () => {
           message: data.message || 'Error importing file',
           errors: data.errors || [],
           duplicates: data.duplicates || [],
-          fileError: data.error || null
+          fileError: data.error || null,
+          detectedColumns: data.detectedColumns || [] // Add detected columns to state
         });
         setShowErrorModal(true);
         
@@ -893,6 +894,17 @@ const Leads = () => {
                     <p className="file-error">File Error: {importErrors.fileError}</p>
                   )}
                 </div>
+                
+                {importErrors.detectedColumns && (
+                  <div className="detected-columns-info" style={{marginBottom: 12}}>
+                    <strong>Detected Columns:</strong>
+                    <ul style={{margin: '6px 0 0 0', paddingLeft: 18}}>
+                      {importErrors.detectedColumns.map((col, idx) => (
+                        <li key={idx}>{col}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 
                 {importErrors.errors.length > 0 && (
                   <div className="validation-errors">

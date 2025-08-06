@@ -19,25 +19,7 @@ const Navigation = () => {
 
   // Function to get the dynamic title based on current route
   const getPageTitle = () => {
-    const path = location.pathname;
-    switch (path) {
-      case '/dashboard':
-        return isAdmin ? 'Innovatiq Media CRM - Admin Dashboard' : 'Innovatiq Media CRM';
-      case '/admin':
-        return 'Innovatiq Media CRM - Admin Dashboard';
-      case '/leads':
-        return 'Innovatiq Media CRM - Leads';
-      case '/call-schedule':
-        return 'Innovatiq Media CRM - Call Schedule';
-      case '/customers':
-        return 'Innovatiq Media CRM - Customers';
-      case '/chat':
-        return 'Innovatiq Media CRM - Chat';
-      case '/reports':
-        return 'Innovatiq Media CRM - Reports';
-      default:
-        return 'Innovatiq Media CRM';
-    }
+    return 'Innovatiq Media CRM';
   };
 
   return (
