@@ -14,7 +14,17 @@ const Leads = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [refreshing, setRefreshing] = useState(false); // Track automatic refresh state
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [importErrors, setImportErrors] = useState({ message: '', errors: [], duplicates: [], fileError: null });
+  const [importErrors, setImportErrors] = useState({ 
+    message: '', 
+    errors: [], 
+    duplicateEmails: [], 
+    existingEmails: [], 
+    fileError: null, 
+    detectedColumns: [],
+    headerRow: [],
+    suggestion: null,
+    summary: null
+  });
   const [stats, setStats] = useState({
     total: 0,
     new: 0,
@@ -189,7 +199,7 @@ const Leads = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Clear the file input
+    // Clear the file input for future uploads
     event.target.value = '';
 
     // Validate file size (10MB limit)
@@ -198,7 +208,8 @@ const Leads = () => {
       setImportErrors({
         message: 'File too large',
         errors: [],
-        duplicates: [],
+        duplicateEmails: [],
+        existingEmails: [],
         fileError: `File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 10MB limit.`
       });
       setShowErrorModal(true);
@@ -212,7 +223,8 @@ const Leads = () => {
       setImportErrors({
         message: 'Invalid file type',
         errors: [],
-        duplicates: [],
+        duplicateEmails: [],
+        existingEmails: [],
         fileError: `File type "${fileExtension}" is not supported. Please use ${allowedExtensions.join(', ')} files.`
       });
       setShowErrorModal(true);
@@ -222,7 +234,8 @@ const Leads = () => {
     console.log('📁 Uploading file:', {
       name: file.name,
       size: (file.size / 1024 / 1024).toFixed(2) + 'MB',
-      type: file.type
+      type: file.type,
+      extension: fileExtension
     });
 
     setUploading(true);
@@ -240,16 +253,43 @@ const Leads = () => {
       });
 
       const data = await response.json();
+      console.log('📊 Import response:', data);
 
-      if (response.ok) {
-        alert(`Successfully imported ${data.count} leads!`);
+      if (response.ok && data.success) {
+        // Success case - show success message with import stats
+        const successMessage = data.message || `Successfully imported ${data.validLeads} leads!`;
+        
+        // Show a more detailed success message if there were any issues
+        if (data.summary && (data.summary.duplicates > 0 || data.summary.existing > 0 || data.summary.invalid > 0)) {
+          const details = [];
+          if (data.summary.invalid > 0) details.push(`${data.summary.invalid} invalid`);
+          if (data.summary.duplicates > 0) details.push(`${data.summary.duplicates} duplicates`);
+          if (data.summary.existing > 0) details.push(`${data.summary.existing} already exist`);
+          
+          alert(`${successMessage}\n\nNote: Some leads were not imported (${details.join(', ')}).\nCheck the import summary for details.`);
+          
+          // Show the error modal with the partial success information
+          setImportErrors({
+            message: `${successMessage} (with some issues)`,
+            errors: data.errors || [],
+            duplicateEmails: data.duplicateEmails || [],
+            existingEmails: data.existingEmails || [],
+            detectedColumns: data.detectedColumns || [],
+            headerRow: data.headerRow || [],
+            summary: data.summary || {}
+          });
+          setShowErrorModal(true);
+        } else {
+          // Clean success with no issues
+          alert(successMessage);
+        }
         
         // Dispatch custom event to notify other components about new leads
         window.dispatchEvent(new CustomEvent('leadsImported', { 
-          detail: { count: data.count } 
+          detail: { count: data.validLeads || 0 } 
         }));
         
-        // Refresh the leads list and ensure New leads are visible
+        // Refresh the leads list and stats
         await fetchLeads();
         await fetchStats();
         
@@ -260,27 +300,31 @@ const Leads = () => {
           console.log(`After import: Updated New leads view with ${newLeads.length} leads`);
         }
       } else {
+        // Error case - show error modal with details
         console.error('❌ Upload failed:', data);
         
-        // Set error data for modal display
+        // Set error data for modal display with enhanced error information
         setImportErrors({
           message: data.message || 'Error importing file',
           errors: data.errors || [],
-          duplicates: data.duplicates || [],
+          duplicateEmails: data.duplicateEmails || [],
+          existingEmails: data.existingEmails || [],
           fileError: data.error || null,
-          detectedColumns: data.detectedColumns || [] // Add detected columns to state
+          detectedColumns: data.detectedColumns || [],
+          headerRow: data.headerRow || [],
+          suggestion: data.suggestion || null
         });
         setShowErrorModal(true);
         
-        // Also log to console for debugging
-        if (data.errors) {
-          console.error('Validation errors:', data.errors);
+        // Log detailed error information for debugging
+        if (data.errors && data.errors.length) {
+          console.error(`Validation errors (${data.errors.length}):`, data.errors);
         }
-        if (data.duplicates) {
-          console.error('Duplicate emails:', data.duplicates);
+        if (data.duplicateEmails && data.duplicateEmails.length) {
+          console.error(`Duplicate emails (${data.duplicateEmails.length}):`, data.duplicateEmails);
         }
-        if (data.error) {
-          console.error('File processing error:', data.error);
+        if (data.existingEmails && data.existingEmails.length) {
+          console.error(`Existing emails (${data.existingEmails.length}):`, data.existingEmails);
         }
       }
     } catch (error) {
@@ -297,7 +341,8 @@ const Leads = () => {
       setImportErrors({
         message: errorMessage,
         errors: [],
-        duplicates: [],
+        duplicateEmails: [],
+        existingEmails: [],
         fileError: error.message || 'Unknown error occurred'
       });
       setShowErrorModal(true);
@@ -308,27 +353,78 @@ const Leads = () => {
 
 
 
-  const handleExport = async () => {
+  const handleExport = async (status = null) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl('api/leads/export/excel'), {
+      
+      // Build the export URL with optional status filter
+      let exportUrl = getApiUrl('api/leads/export/excel');
+      if (status && status !== 'All') {
+        exportUrl += `?status=${encodeURIComponent(status)}`;
+      }
+      
+      console.log(`📤 Exporting leads${status ? ` with status: ${status}` : ''}`);
+      
+      const response = await fetch(exportUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
       if (response.ok) {
+        // Check content type to ensure we received an Excel file
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+          const errorText = await response.text();
+          console.error('Export returned wrong content type:', contentType, errorText);
+          alert('Error: Server did not return a valid Excel file. Please try again later.');
+          return;
+        }
+        
         const blob = await response.blob();
+        if (blob.size === 0) {
+          alert('No leads found to export.');
+          return;
+        }
+        
+        // Get filename from Content-Disposition header if available
+        let filename = `leads_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+        const disposition = response.headers.get('content-disposition');
+        if (disposition && disposition.includes('filename=')) {
+          const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1];
+          }
+        }
+        
+        // Create download link and trigger download
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `leads_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+        
+        console.log(`✅ Export successful: ${filename}`);
+      } else if (response.status === 404) {
+        alert('No leads found to export.');
       } else {
-        alert('Error exporting leads');
+        // Try to get detailed error message
+        let errorMessage = 'Error exporting leads';
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // If we can't parse JSON, use status text
+          errorMessage = `Error exporting leads: ${response.statusText || response.status}`;
+        }
+        
+        alert(errorMessage);
+        console.error('Export failed:', response.status, response.statusText);
       }
     } catch (error) {
       alert('Error exporting leads. Please try again.');
@@ -753,12 +849,14 @@ const Leads = () => {
                 {uploading ? 'Uploading...' : 'Import'}
               </button>
               {isAdmin && (
-                <button className="export-button" onClick={handleExport}>
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                  </svg>
-                  Export
-                </button>
+                <div className="dropdown">
+                  <button className="export-button" onClick={() => handleExport(activeFilter)}>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                    Export {activeFilter !== 'All' ? activeFilter : ''} Leads
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -876,7 +974,7 @@ const Leads = () => {
           <div className="modal-overlay" onClick={() => setShowErrorModal(false)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h3>Import Errors</h3>
+                <h3>{importErrors.summary ? "Import Summary" : "Import Errors"}</h3>
                 <button 
                   className="modal-close"
                   onClick={() => setShowErrorModal(false)}
@@ -888,17 +986,18 @@ const Leads = () => {
               </div>
               
               <div className="modal-content">
-                <div className="error-message">
+                <div className={`error-message ${importErrors.summary ? "success-message" : ""}`}>
                   <p><strong>{importErrors.message}</strong></p>
                   {importErrors.fileError && (
                     <p className="file-error">File Error: {importErrors.fileError}</p>
                   )}
                 </div>
                 
-                {importErrors.detectedColumns && (
-                  <div className="detected-columns-info" style={{marginBottom: 12}}>
+                {/* **MODIFIED**: Display detected columns on error for easier debugging */}
+                {importErrors.detectedColumns && importErrors.detectedColumns.length > 0 && (
+                  <div className="detected-columns-info" style={{marginBottom: 12, background: '#f8f8f8', padding: '8px 12px', borderRadius: '4px'}}>
                     <strong>Detected Columns:</strong>
-                    <ul style={{margin: '6px 0 0 0', paddingLeft: 18}}>
+                    <ul style={{margin: '6px 0 0 0', paddingLeft: 18, listStyleType: 'disc'}}>
                       {importErrors.detectedColumns.map((col, idx) => (
                         <li key={idx}>{col}</li>
                       ))}
@@ -906,14 +1005,58 @@ const Leads = () => {
                   </div>
                 )}
                 
-                {importErrors.errors.length > 0 && (
+                {/* Import Summary (if partial success) */}
+                {importErrors.summary && (
+                  <div className="import-summary" style={{marginBottom: 16}}>
+                    <h4>Import Summary:</h4>
+                    <ul style={{margin: '6px 0 0 0', paddingLeft: 18}}>
+                      <li><strong>Total leads processed:</strong> {importErrors.summary.total || 0}</li>
+                      <li><strong>Successfully imported:</strong> {importErrors.summary.valid || 0}</li>
+                      {importErrors.summary.invalid > 0 && (
+                        <li><strong>Invalid leads:</strong> {importErrors.summary.invalid}</li>
+                      )}
+                      {importErrors.summary.duplicates > 0 && (
+                        <li><strong>Duplicate emails in file:</strong> {importErrors.summary.duplicates}</li>
+                      )}
+                      {importErrors.summary.existing > 0 && (
+                        <li><strong>Already existing in database:</strong> {importErrors.summary.existing}</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                
+                {/* Suggestion from backend */}
+                {importErrors.suggestion && (
+                  <div className="suggestion-info" style={{marginBottom: 16}}>
+                    <h4>Suggestion:</h4>
+                    <p>{importErrors.suggestion}</p>
+                  </div>
+                )}
+                
+                {/* Header row from file
+                {importErrors.headerRow && importErrors.headerRow.length > 0 && (
+                  <div className="header-row-info" style={{marginBottom: 12}}>
+                    <strong>Header Row:</strong>
+                    <ul style={{margin: '6px 0 0 0', paddingLeft: 18}}>
+                      {importErrors.headerRow.map((col, idx) => (
+                        <li key={idx}>{col || '<empty>'}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )} */}
+                
+                {importErrors.errors && importErrors.errors.length > 0 && (
                   <div className="validation-errors">
                     <h4>Validation Errors ({importErrors.errors.length})</h4>
                     <div className="error-list">
                       {importErrors.errors.slice(0, 10).map((error, index) => (
                         <div key={index} className="error-item">
                           <span className="error-icon">⚠️</span>
-                          <span className="error-text">{error}</span>
+                          <span className="error-text">
+                            {typeof error === 'object' && error.row ? 
+                              <><strong>Row {error.row}:</strong> {error.message}</> : 
+                              error}
+                          </span>
                         </div>
                       ))}
                       {importErrors.errors.length > 10 && (
@@ -927,20 +1070,51 @@ const Leads = () => {
                   </div>
                 )}
                 
-                {importErrors.duplicates.length > 0 && (
+                {/* Duplicate emails within file */}
+                {importErrors.duplicateEmails && importErrors.duplicateEmails.length > 0 && (
                   <div className="duplicate-errors">
-                    <h4>Duplicate Emails ({importErrors.duplicates.length})</h4>
+                    <h4>Duplicate Emails in File ({importErrors.duplicateEmails.length})</h4>
                     <div className="error-list">
-                      {importErrors.duplicates.slice(0, 10).map((email, index) => (
+                      {importErrors.duplicateEmails.slice(0, 10).map((dup, index) => (
                         <div key={index} className="error-item">
                           <span className="error-icon">📧</span>
-                          <span className="error-text">{email}</span>
+                          <span className="error-text">
+                            <strong>{typeof dup === 'object' ? dup.email : dup}</strong>
+                            {typeof dup === 'object' && dup.count && ` - ${dup.count} occurrences`}
+                            {typeof dup === 'object' && dup.rows && ` (rows: ${dup.rows.slice(0, 3).join(', ')}${dup.rows.length > 3 ? '...' : ''})`}
+                          </span>
                         </div>
                       ))}
-                      {importErrors.duplicates.length > 10 && (
+                      {importErrors.duplicateEmails.length > 10 && (
                         <div className="error-item">
                           <span className="error-text">
-                            ... and {importErrors.duplicates.length - 10} more duplicates
+                            ... and {importErrors.duplicateEmails.length - 10} more duplicates
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Existing emails in database */}
+                {importErrors.existingEmails && importErrors.existingEmails.length > 0 && (
+                  <div className="existing-errors">
+                    <h4>Already Existing in Database ({importErrors.existingEmails.length})</h4>
+                    <div className="error-list">
+                      {importErrors.existingEmails.slice(0, 10).map((existing, index) => (
+                        <div key={index} className="error-item">
+                          <span className="error-icon">🔄</span>
+                          <span className="error-text">
+                            <strong>{typeof existing === 'object' ? existing.email : existing}</strong>
+                            {typeof existing === 'object' && existing.name && existing.existingName && 
+                              ` - New: ${existing.name}, Existing: ${existing.existingName}`}
+                          </span>
+                        </div>
+                      ))}
+                      {importErrors.existingEmails.length > 10 && (
+                        <div className="error-item">
+                          <span className="error-text">
+                            ... and {importErrors.existingEmails.length - 10} more existing emails
                           </span>
                         </div>
                       )}
@@ -954,7 +1128,9 @@ const Leads = () => {
                     <li><strong>Name:</strong> Must be at least 2 characters long</li>
                     <li><strong>Email:</strong> Must be a valid email format (e.g., user@example.com)</li>
                     <li><strong>Status:</strong> Must be one of: New, Qualified, Negotiation, Closed, Lost</li>
-                    <li><strong>Duplicates:</strong> Remove or update existing leads with the same email</li>
+                    <li><strong>Duplicates:</strong> Remove duplicate emails from your file</li>
+                    <li><strong>Existing Emails:</strong> Update existing leads instead of importing as new</li>
+                    <li><strong>File Format:</strong> Ensure file is CSV, XLSX, or XLS and properly formatted</li>
                   </ul>
                 </div>
               </div>
@@ -1084,4 +1260,4 @@ const Leads = () => {
   );
 };
 
-export default Leads; 
+export default Leads;
