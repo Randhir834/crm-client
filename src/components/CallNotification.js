@@ -98,11 +98,6 @@ const CallNotification = ({ call, onClose, onDismiss }) => {
             <div className="call-duration">
               <strong>Duration:</strong> {call.duration} minutes
             </div>
-            {call.notes && (
-              <div className="call-notes">
-                <strong>Notes:</strong> {call.notes}
-              </div>
-            )}
           </div>
         </div>
         

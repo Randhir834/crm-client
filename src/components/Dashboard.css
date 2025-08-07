@@ -1760,24 +1760,7 @@ body {
   border-top-color: white;
 }
 
-.chat-loading-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 8px;
-  margin: 16px;
-  font-size: 14px;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-  animation: slideIn 0.3s ease;
-}
-
-.chat-loading-indicator .mini-spinner {
-  border-top-color: white;
-}
+/* Chat loading indicator styles removed */
 
 /* Import Error Modal Styles */
 .modal-content {
@@ -3625,83 +3608,89 @@ body {
 .time-input {
   position: relative;
   cursor: pointer;
-  padding-right: 55px;
-  background: linear-gradient(145deg, #f8f9fa 0%, #ffffff 100%);
-  border: 2px solid #e2e8f0;
-  border-radius: 14px;
-  transition: all 0.3s ease;
+  padding: 14px 55px 14px 16px;
+  background: #ffffff;
+  border: 1px solid #dfe1e5;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .date-input:hover,
 .time-input:hover {
-  border-color: #667eea;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.12);
+  border-color: #4285f4;
+  box-shadow: 0 1px 6px rgba(66, 133, 244, 0.25);
   background: #ffffff;
 }
 
 .date-input:focus,
 .time-input:focus {
   outline: none;
-  border: none;
-  box-shadow: none;
-  transform: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.25);
   background: #ffffff;
 }
 
 /* Enhanced native picker indicators */
 .date-input::-webkit-calendar-picker-indicator,
 .time-input::-webkit-calendar-picker-indicator {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #f8f9fa;
   cursor: pointer;
   position: absolute;
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  opacity: 1;
-  transition: all 0.3s ease;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  border-radius: 4px;
   border: none;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z'/%3E%3C/svg%3E");
-  background-size: 22px 22px;
+  padding: 4px;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234285f4'%3E%3Cpath d='M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z'/%3E%3C/svg%3E");
+  background-size: 20px 20px;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .time-input::-webkit-calendar-picker-indicator {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234285f4'%3E%3Cpath d='M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'/%3E%3C/svg%3E");
+  background-size: 20px 20px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .date-input::-webkit-calendar-picker-indicator:hover,
 .time-input::-webkit-calendar-picker-indicator:hover {
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-  background-color: #5a67d8;
+  transform: translateY(-50%) scale(1.05);
+  opacity: 1;
+  background-color: #e8f0fe;
 }
 
 /* Firefox date/time input styling */
 .date-input::-moz-calendar-picker-indicator,
 .time-input::-moz-calendar-picker-indicator {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #f8f9fa;
   cursor: pointer;
   border: none;
-  padding: 10px;
+  padding: 4px;
   margin: 0;
-  opacity: 1;
-  transition: all 0.3s ease;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-  width: 40px;
-  height: 40px;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
 }
 
 .date-input::-moz-calendar-picker-indicator:hover,
 .time-input::-moz-calendar-picker-indicator:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-  background-color: #5a67d8;
+  transform: scale(1.05);
+  opacity: 1;
+  background-color: #e8f0fe;
 }
 
 /* Custom input styling for better appearance */
@@ -3710,8 +3699,10 @@ body {
   cursor: pointer;
   user-select: none;
   position: relative;
-  font-weight: 500;
-  color: #2d3748;
+  font-weight: 400;
+  color: #202124;
+  font-size: 14px;
+  height: 44px;
 }
 
 .schedule-input[type="date"]:focus,
@@ -3720,23 +3711,27 @@ body {
   outline: none;
 }
 
-/* Add subtle animation for input focus */
+/* Smooth transition on focus */
 .schedule-input[type="date"]:focus,
 .schedule-input[type="time"]:focus {
-  animation: inputFocus 0.3s ease;
-}
-
-@keyframes inputFocus {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Enhanced label styling for date/time inputs */
+.form-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #5f6368;
+}
+
 .form-label .label-icon {
-  font-size: 18px;
+  font-size: 16px;
   opacity: 0.9;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  margin-right: 6px;
 }
 
 .form-label:hover .label-icon {
@@ -3744,9 +3739,16 @@ body {
   opacity: 1;
 }
 
+/* Input wrapper styling */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 /* Add subtle glow effect on hover */
 .input-wrapper:hover .schedule-input {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 1px 6px rgba(60, 64, 67, 0.15);
+  border-color: #aaa;
 }
 
 .schedule-textarea {
@@ -4057,21 +4059,22 @@ body {
 @media (max-width: 480px) {
   .date-input,
   .time-input {
-    padding-right: 45px;
-    font-size: 16px;
+    padding: 12px 45px 12px 14px;
+    font-size: 14px;
+    height: 40px;
   }
   
   .date-input::-webkit-calendar-picker-indicator,
   .time-input::-webkit-calendar-picker-indicator {
-    width: 32px;
-    height: 32px;
-    right: 4px;
+    width: 24px;
+    height: 24px;
+    right: 8px;
   }
   
   .date-input::-moz-calendar-picker-indicator,
   .time-input::-moz-calendar-picker-indicator {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
   }
   
   .schedule-modal .modal-header h3 {
@@ -4089,24 +4092,25 @@ body {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 380px) {
   .date-input,
   .time-input {
-    padding-right: 40px;
-    font-size: 16px;
+    padding: 10px 40px 10px 12px;
+    font-size: 14px;
+    height: 38px;
   }
   
   .date-input::-webkit-calendar-picker-indicator,
   .time-input::-webkit-calendar-picker-indicator {
-    width: 28px;
-    height: 28px;
-    right: 4px;
+    width: 22px;
+    height: 22px;
+    right: 8px;
   }
   
   .date-input::-moz-calendar-picker-indicator,
   .time-input::-moz-calendar-picker-indicator {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
   }
   
   /* Simplify hover effects on mobile */
@@ -4308,6 +4312,26 @@ body {
 
 .role-badge.user {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+/* Status badges */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  display: inline-block; /* Ensure the badge is visible */
+}
+
+.status-badge.online {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: white;
+}
+
+.status-badge.offline {
+  background: linear-gradient(135deg, #e0e0e0 0%, #b0b0b0 100%);
   color: white;
 }
 

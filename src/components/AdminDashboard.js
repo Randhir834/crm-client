@@ -15,6 +15,7 @@ const AdminDashboard = () => {
     totalChats: 0
   });
   const [users, setUsers] = useState([]);
+  const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingUser, setUpdatingUser] = useState(null);
@@ -74,6 +75,41 @@ const AdminDashboard = () => {
       } else {
         console.error('Failed to fetch users:', usersResponse.status);
       }
+      
+      // Fetch all user sessions
+      const apiUrl = getApiUrl('api/sessions/all');
+      console.log('Fetching user sessions from:', apiUrl);
+      
+      const sessionsResponse = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (sessionsResponse.ok) {
+        const sessionsData = await sessionsResponse.json();
+        console.log('User sessions data received:', sessionsData);
+        
+        // Check if the response has the expected structure
+        if (sessionsData && sessionsData.success && Array.isArray(sessionsData.users)) {
+          setUserSessions(sessionsData.users);
+          console.log('User sessions state updated:', sessionsData.users.length, 'users');
+        } else {
+          console.error('Unexpected session data format:', sessionsData);
+          // If the data doesn't have the expected structure, try to handle it gracefully
+          if (Array.isArray(sessionsData)) {
+            setUserSessions(sessionsData);
+            console.log('User sessions state updated (direct array):', sessionsData.length, 'users');
+          } else {
+            setUserSessions([]);
+            console.error('Could not parse user sessions data');
+          }
+        }
+      } else {
+        const errorText = await sessionsResponse.text();
+        console.error('Failed to fetch user sessions:', sessionsResponse.status, errorText);
+      }
     } catch (error) {
       console.error('Error fetching admin data:', error);
       setError('Failed to load admin data. Please try again.');
@@ -127,6 +163,23 @@ const AdminDashboard = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+  
+  const formatDuration = (milliseconds) => {
+    if (!milliseconds) return '0 min';
+    
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) {
+      return `${days}d ${hours % 24}h ${minutes % 60}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else {
+      return `${minutes}m`;
+    }
   };
 
   if (loading) {
@@ -300,9 +353,98 @@ const AdminDashboard = () => {
             )}
           </div>
         </div>
+        
+        {/* User Session Tracking */}
+        <div className="content-section">
+          <div className="section-header">
+            <div className="section-title">
+              <h2>⏱️ User Session Tracking</h2>
+              <p>Monitor user login/logout times and total time spent on the website</p>
+            </div>
+          </div>
+          
+          <div className="table-container">
+            {console.log('Rendering user sessions section, data:', userSessions)}
+            {userSessions.length > 0 ? (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Login Time</th>
+                    <th>Logout Time</th>
+                    <th>Current Session</th>
+                    <th>Total Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userSessions.map((user) => {
+                    // Check if user and sessions exist
+                    if (!user || !user.sessions) {
+                      console.log('Invalid user data:', user);
+                      return null;
+                    }
+                    
+                    return (
+                      <tr key={user._id}>
+                        <td>
+                          <div className="user-name">
+                            <div className="user-avatar">
+                              {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                            </div>
+                            <div>
+                              <div>{user.name || 'Unknown User'}</div>
+                              <div className="user-email">{user.email || 'No email'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`status-badge ${user.sessions && user.sessions.current ? 'online' : 'offline'}`}>
+                            {user.sessions && user.sessions.current ? 'Online' : 'Offline'}
+                          </span>
+                        </td>
+                        <td>
+                          {user.sessions && user.sessions.current ? 
+                            formatDate(user.sessions.current.loginTime) : 
+                            (user.sessions && user.sessions.lastCompleted ? 
+                              formatDate(user.sessions.lastCompleted.loginTime) : 
+                              'Never')
+                          }
+                        </td>
+                        <td>
+                          {user.sessions && user.sessions.current ? 
+                            'Active Session' : 
+                            (user.sessions && user.sessions.lastCompleted ? 
+                              formatDate(user.sessions.lastCompleted.logoutTime) : 
+                              'N/A')
+                          }
+                        </td>
+                        <td>
+                          {user.sessions && user.sessions.current ? 
+                            formatDuration(user.sessions.current.duration) : 
+                            'N/A'
+                          }
+                        </td>
+                        <td>
+                          {user.sessions ? formatDuration(user.sessions.totalSessionTime) : 'N/A'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">⏱️</div>
+                <h3>No Session Data</h3>
+                <p>There is no user session data available yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </Layout>
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

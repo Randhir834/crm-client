@@ -13,8 +13,7 @@ const CallSchedule = () => {
   const [scheduleForm, setScheduleForm] = useState({
     leadId: '',
     scheduledDate: '',
-    scheduledTime: '',
-    notes: ''
+    scheduledTime: ''
   });
   // Remove filterStatus state and dropdown
   // const [filterStatus, setFilterStatus] = useState('all');
@@ -114,8 +113,7 @@ const CallSchedule = () => {
     setScheduleForm({
       leadId: lead._id,
       scheduledDate: '',
-      scheduledTime: '',
-      notes: ''
+      scheduledTime: ''
     });
     setShowScheduleModal(true);
   };
@@ -522,7 +520,6 @@ const CallSchedule = () => {
                   <th>Date</th>
                   <th>Time</th>
                   <th>Status</th>
-                  <th>Notes</th>
                   <th>Chat</th>
                   <th>Actions</th>
                 </tr>
@@ -551,7 +548,6 @@ const CallSchedule = () => {
                         {schedule.status}
                       </span>
                     </td>
-                    <td>{schedule.notes || 'No notes'}</td>
                     <td>
                       <button 
                         className="chat-btn"
@@ -615,10 +611,11 @@ const CallSchedule = () => {
                         ...scheduleForm,
                         scheduledDate: e.target.value
                       })}
-                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                      onClick={(e) => e.target.showPicker ? e.target.showPicker() : null}
                       required
                       min={new Date().toISOString().split('T')[0]}
                       className="schedule-input date-input"
+                      placeholder="Select date"
                     />
                   </div>
                 </div>
@@ -635,28 +632,14 @@ const CallSchedule = () => {
                         ...scheduleForm,
                         scheduledTime: e.target.value
                       })}
-                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                      onClick={(e) => e.target.showPicker ? e.target.showPicker() : null}
                       required
                       className="schedule-input time-input"
+                      placeholder="Select time"
                     />
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">
-                    <span className="label-icon">📝</span>
-                    Notes
-                  </label>
-                  <textarea
-                    value={scheduleForm.notes}
-                    onChange={(e) => setScheduleForm({
-                      ...scheduleForm,
-                      notes: e.target.value
-                    })}
-                    placeholder="Add any notes about the call, agenda items, or important points to discuss..."
-                    rows={4}
-                    className="schedule-textarea"
-                  />
-                </div>
+
                 <div className="modal-actions">
                   <button 
                     type="button" 
@@ -739,4 +722,4 @@ const CallSchedule = () => {
   );
 };
 
-export default CallSchedule; 
+export default CallSchedule;

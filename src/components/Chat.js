@@ -15,7 +15,16 @@ const Chat = () => {
   const [openingChat, setOpeningChat] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
-  const [starredMessages, setStarredMessages] = useState(new Set());
+  const [starredMessages, setStarredMessages] = useState(() => {
+    // Load starred messages from localStorage on component mount
+    try {
+      const savedStarredMessages = localStorage.getItem('starredMessages');
+      return savedStarredMessages ? new Set(JSON.parse(savedStarredMessages)) : new Set();
+    } catch (error) {
+      console.error('Error loading starred messages from localStorage:', error);
+      return new Set();
+    }
+  });
 
   const messagesEndRef = useRef(null);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -256,6 +265,14 @@ const Chat = () => {
       } else {
         newSet.add(messageId);
       }
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('starredMessages', JSON.stringify([...newSet]));
+      } catch (error) {
+        console.error('Error saving starred messages to localStorage:', error);
+      }
+      
       return newSet;
     });
   };
@@ -315,7 +332,6 @@ const Chat = () => {
     console.log('📱 Selected Chat:', selectedChat);
     console.log('💬 Messages Count:', messages.length);
     console.log('📋 Total Chats:', chats.length);
-    console.log('⏳ Opening Chat:', openingChat);
     console.log('📤 Sending:', sending);
     console.log('🗑️ Deleting:', deleting);
   };
@@ -326,11 +342,20 @@ const Chat = () => {
     return () => {
       delete window.debugChat;
     };
-  }, [selectedChat, messages, chats, openingChat, sending, deleting]);
+  }, [selectedChat, messages, chats, sending, deleting]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  // Save starred messages to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('starredMessages', JSON.stringify([...starredMessages]));
+    } catch (error) {
+      console.error('Error saving starred messages to localStorage:', error);
+    }
+  }, [starredMessages]);
 
   if (loading) {
     return (
@@ -416,12 +441,6 @@ const Chat = () => {
 
           {/* Chat Messages */}
           <div className="chat-messages">
-            {openingChat && (
-              <div className="chat-loading-indicator">
-                <div className="mini-spinner"></div>
-                <span>Opening chat...</span>
-              </div>
-            )}
             {selectedChat ? (
               <>
                 <div className="chat-header">
@@ -645,4 +664,4 @@ const Chat = () => {
   );
 };
 
-export default Chat; 
+export default Chat;
