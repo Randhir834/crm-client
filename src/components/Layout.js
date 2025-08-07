@@ -58,6 +58,21 @@ const Layout = ({ children }) => {
   useEffect(() => {
     fetchUpcomingCalls(); // Fetch on initial load
 
+    // Listen for call schedule events
+    const handleCallScheduleCreated = (event) => {
+  
+      fetchUpcomingCalls();
+    };
+    
+    const handleCallScheduleDeleted = (event) => {
+  
+      fetchUpcomingCalls();
+    };
+    
+    // Add event listeners
+    window.addEventListener('callScheduleCreated', handleCallScheduleCreated);
+    window.addEventListener('callScheduleDeleted', handleCallScheduleDeleted);
+
     // Periodically fetch for new or updated call schedules
     const fetchInterval = setInterval(fetchUpcomingCalls, 60000); // every 1 minute
 
@@ -67,6 +82,8 @@ const Layout = ({ children }) => {
     return () => {
       clearInterval(fetchInterval);
       clearInterval(checkInterval);
+      window.removeEventListener('callScheduleCreated', handleCallScheduleCreated);
+      window.removeEventListener('callScheduleDeleted', handleCallScheduleDeleted);
     };
   }, [fetchUpcomingCalls, checkAndShowNotifications]);
 

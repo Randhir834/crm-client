@@ -33,7 +33,7 @@ const Chat = () => {
   // Fetch all chats for the user
   const fetchChats = async () => {
     try {
-      console.log('📋 Fetching chats...');
+  
       const token = localStorage.getItem('token');
       const response = await fetch(getApiUrl('api/chats'), {
         headers: {
@@ -44,7 +44,7 @@ const Chat = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Chats fetched successfully:', data.chats?.length || 0);
+
         setChats(data.chats || []);
       } else {
         const errorData = await response.json();
@@ -62,13 +62,13 @@ const Chat = () => {
   // Fetch messages for a specific chat
   const fetchChatMessages = async (chatId) => {
     try {
-      console.log('🔍 Fetching messages for chat ID:', chatId);
+  
       setOpeningChat(true);
       
       // First, try to find the chat in local state
       const localChat = chats.find(chat => chat._id === chatId);
       if (localChat) {
-        console.log('📱 Found chat in local state:', localChat.participantName);
+
         setSelectedChat(localChat);
         setMessages(localChat.messages || []);
         scrollToBottom();
@@ -85,13 +85,12 @@ const Chat = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Chat data received from server:', data);
+
         
         if (data.chat) {
           setSelectedChat(data.chat);
           setMessages(data.chat.messages || []);
-          console.log('📱 Chat selected:', data.chat.participantName);
-          console.log('💬 Messages loaded:', data.chat.messages?.length || 0);
+          
           scrollToBottom();
         } else {
           console.error('❌ No chat data in response');
@@ -198,9 +197,7 @@ const Chat = () => {
   const deleteChat = async () => {
     if (!chatToDelete) return;
 
-    console.log('🗑️ Starting chat deletion process...');
-    console.log('📱 Frontend: Deleting chat with ID:', chatToDelete._id);
-    console.log('👤 Participant:', chatToDelete.participantName);
+
 
     setDeleting(true);
     try {
@@ -214,12 +211,12 @@ const Chat = () => {
       });
 
       if (response.ok) {
-        console.log('✅ Backend: Chat deleted successfully');
+
         
         // Remove the chat from the list
         setChats(prevChats => {
           const updatedChats = prevChats.filter(chat => chat._id !== chatToDelete._id);
-          console.log('📱 Frontend: Updated chat list, remaining chats:', updatedChats.length);
+
           return updatedChats;
         });
         
@@ -227,7 +224,7 @@ const Chat = () => {
         if (selectedChat && selectedChat._id === chatToDelete._id) {
           setSelectedChat(null);
           setMessages([]);
-          console.log('📱 Frontend: Cleared selected chat');
+
         }
         
         // Show success message
@@ -326,23 +323,7 @@ const Chat = () => {
     fetchChats();
   }, []);
 
-  // Debug function to log chat state
-  const debugChatState = () => {
-    console.log('🔍 Debug Chat State:');
-    console.log('📱 Selected Chat:', selectedChat);
-    console.log('💬 Messages Count:', messages.length);
-    console.log('📋 Total Chats:', chats.length);
-    console.log('📤 Sending:', sending);
-    console.log('🗑️ Deleting:', deleting);
-  };
 
-  // Add debug function to window for testing
-  useEffect(() => {
-    window.debugChat = debugChatState;
-    return () => {
-      delete window.debugChat;
-    };
-  }, [selectedChat, messages, chats, sending, deleting]);
 
   useEffect(() => {
     scrollToBottom();
@@ -393,11 +374,11 @@ const Chat = () => {
                     key={chat._id || `temp-${Math.random()}`}
                     className={`chat-item ${selectedChat?._id === chat._id ? 'active' : ''}`}
                     onClick={() => {
-                      console.log('🖱️ Chat clicked:', chat.participantName, 'ID:', chat._id);
+
                       if (chat._id) {
                         // Prevent opening the same chat multiple times
                         if (selectedChat?._id === chat._id && !openingChat) {
-                          console.log('📱 Chat already selected');
+
                           return;
                         }
                         fetchChatMessages(chat._id);

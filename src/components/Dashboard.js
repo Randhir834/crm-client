@@ -113,12 +113,9 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        console.log('No token found, skipping dashboard data fetch');
         setIsLoading(false);
         return;
       }
-
-      console.log('Fetching dashboard data...');
 
       // Fetch leads statistics
       const leadsStatsResponse = await axios.get(getApiUrl('api/leads/stats'), {
@@ -158,26 +155,7 @@ const Dashboard = () => {
         const customersStats = customersStatsResponse.data.stats || {};
         const customers = customersResponse.data.customers || [];
         
-        console.log('API Responses:', {
-          leadsStatsResponse: leadsStatsResponse.data,
-          leadsResponse: leadsResponse.data,
-          callsStatsResponse: callsStatsResponse.data,
-          callsResponse: callsResponse.data,
-          customersStatsResponse: customersStatsResponse.data,
-          customersResponse: customersResponse.data
-        });
-        
-        console.log('Processed data:', {
-          leadsStats: leadsStats,
-          callsStats: callsStats,
-          customersStats: customersStats,
-          leadsCount: leads.length,
-          callsCount: calls.length,
-          customersCount: customers.length,
-          leadsSample: leads.slice(0, 2),
-          callsSample: calls.slice(0, 2),
-          customersSample: customers.slice(0, 2)
-        });
+
         
         // Calculate statistics using stats data
         const totalLeads = leadsStats.total || 0;
@@ -189,18 +167,7 @@ const Dashboard = () => {
         const totalCustomers = customersStats.total || customers.length;
         const activeCustomers = customersStats.active || customers.filter(customer => customer.status === 'active').length;
         
-        console.log('Calculated stats:', {
-          totalLeads,
-          activeLeads,
-          totalCalls,
-          completedCalls,
-          conversionRate,
-          totalCustomers,
-          activeCustomers,
-          leadsStats,
-          callsStats,
-          customersStats
-        });
+
 
         setStats({
           totalLeads,
@@ -322,7 +289,7 @@ const Dashboard = () => {
           .sort((a, b) => new Date(b.time) - new Date(a.time))
           .slice(0, 8);
 
-        console.log('Generated activities:', allActivity);
+
 
         // If no activities found, add some fallback activities
         if (allActivity.length === 0) {
@@ -401,6 +368,21 @@ const Dashboard = () => {
 
   // Set up periodic refresh of session info and dashboard data
   useEffect(() => {
+    // Listen for call schedule events
+    const handleCallScheduleCreated = (event) => {
+  
+      fetchDashboardData();
+    };
+    
+    const handleCallScheduleDeleted = (event) => {
+  
+      fetchDashboardData();
+    };
+    
+    // Add event listeners
+    window.addEventListener('callScheduleCreated', handleCallScheduleCreated);
+    window.addEventListener('callScheduleDeleted', handleCallScheduleDeleted);
+    
     const sessionInterval = setInterval(() => {
       fetchSessionUpdates();
     }, 10000); // Refresh every 10 seconds for real-time updates
@@ -412,6 +394,8 @@ const Dashboard = () => {
     return () => {
       clearInterval(sessionInterval);
       clearInterval(dashboardInterval);
+      window.removeEventListener('callScheduleCreated', handleCallScheduleCreated);
+      window.removeEventListener('callScheduleDeleted', handleCallScheduleDeleted);
     };
   }, []);
 
@@ -420,7 +404,7 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        console.log('Fetching session info...');
+    
         
 
         
@@ -431,12 +415,7 @@ const Dashboard = () => {
         if (response.data.success) {
           const { currentSession, totalSessionTime, last24HoursUsage, lastLogoutTime } = response.data.stats;
           
-          console.log('Session stats received:', {
-            currentSession,
-            totalSessionTime,
-            last24HoursUsage,
-            lastLogoutTime: lastLogoutTime ? new Date(lastLogoutTime) : null
-          });
+
           
           setSessionInfo({
             loginTime: currentSession ? new Date(currentSession.loginTime) : null,
@@ -448,7 +427,7 @@ const Dashboard = () => {
           });
         }
       } else {
-        console.log('No token found, using fallback data');
+
         // Fallback: use localStorage login time if no session data
         const loginTime = localStorage.getItem('loginTime');
         if (loginTime) {
@@ -495,11 +474,7 @@ const Dashboard = () => {
         if (response.data.success) {
           const { currentSession, lastLogoutTime, last24HoursUsage } = response.data.updates;
           
-          console.log('Session updates received:', {
-            currentSession,
-            lastLogoutTime: lastLogoutTime ? new Date(lastLogoutTime) : null,
-            last24HoursUsage
-          });
+
           
           setSessionInfo(prev => {
             const newLastLogoutTime = lastLogoutTime ? new Date(lastLogoutTime) : prev.lastLogoutTime;
@@ -507,7 +482,7 @@ const Dashboard = () => {
             // Check if last logout time changed
             if (prev.lastLogoutTime && newLastLogoutTime && 
                 prev.lastLogoutTime.getTime() !== newLastLogoutTime.getTime()) {
-              console.log('Last logout time changed from', prev.lastLogoutTime, 'to', newLastLogoutTime);
+
               setShowNotification(true);
               // Hide notification after 5 seconds
               setTimeout(() => setShowNotification(false), 5000);
@@ -535,7 +510,7 @@ const Dashboard = () => {
       try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          console.log('Notification permission granted');
+      
         }
       } catch (error) {
         console.error('Error requesting notification permission:', error);

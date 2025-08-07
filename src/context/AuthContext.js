@@ -64,11 +64,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      console.log('AuthContext: Attempting login with credentials:', credentials);
+  
       setError(null);
       
       const response = await axios.post('/auth/login', credentials);
-      console.log('AuthContext: Login response:', response.data);
+      
       
       const { token, user } = response.data;
       
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
       
-      console.log('AuthContext: Login successful, user set:', user);
+      
       return { success: true };
     } catch (error) {
       console.error('AuthContext: Login error:', error);

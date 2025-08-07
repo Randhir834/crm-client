@@ -78,7 +78,6 @@ const CallNotification = ({ call, onClose, onDismiss }) => {
             </svg>
           </div>
           <button className="call-notification-close" onClick={onClose}>
-            ×
           </button>
         </div>
         

@@ -1635,6 +1635,30 @@ body {
   font-size: 14.4px; /* Increased by 3% from 14px */
 }
 
+.uploaded-by {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+}
+
+.uploaded-by.unknown {
+  background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+  color: #2c3e50;
+}
+
+.uploaded-by:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -2956,13 +2980,14 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(5px);
   animation: fadeIn 0.3s ease-out;
+  padding: 20px;
 }
 
 @keyframes fadeIn {
@@ -3022,17 +3047,82 @@ body {
   margin-right: 10px;
 }
 
+/* Delete Button */
+.delete-btn {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--error-color);
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--error-color);
+  border-radius: var(--border-radius-small);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(231, 76, 60, 0.1);
+}
+
+.delete-btn:hover {
+  background: var(--error-color);
+  color: white;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Delete Confirmation Modal Styles */
+.cancel-btn {
+  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--border-color);
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.cancel-btn:hover {
+  background: var(--background-primary);
+  border-color: var(--text-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.delete-confirm-btn {
+  padding: 0.7rem 1.4rem;
+  border: none;
+  background: var(--error-color);
+  color: white;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+}
+
+.delete-confirm-btn:hover {
+  background: #c0392b; /* Darker red */
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5);
+  transform: translateY(-2px);
+}
+
 .modal {
   background: var(--background-secondary);
   border-radius: 16px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
   width: 90%;
-  max-width: 550px;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
   animation: modalSlideIn 0.4s ease-out;
   border: 1px solid var(--border-color);
   position: relative;
+  transform: translateY(0);
 }
 
 .modal::before {
@@ -3042,7 +3132,7 @@ body {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--accent-color), var(--success-color));
+  background: linear-gradient(90deg, var(--error-color), #c0392b);
   border-radius: 16px 16px 0 0;
 }
 
@@ -3061,56 +3151,37 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28px 32px 24px;
-  border-bottom: 3px solid var(--accent-color);
-  background: var(--gradient-primary);
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(231, 76, 60, 0.2);
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
   position: relative;
   box-shadow: var(--shadow-medium);
+  border-radius: 16px 16px 0 0;
 }
 
 .modal-header h3 {
   margin: 0;
   color: white;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 12px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .modal-header h3::before {
-  content: '💬';
-  font-size: 28px;
+  content: '🗑️';
+  font-size: 22px;
   animation: pulse 2s infinite;
 }
 
 .modal-close {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  font-size: 24px;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: var(--transition);
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  line-height: 1;
+  display: none; /* Hide the entire button */
 }
 
-.modal-close:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: var(--error-color);
-  transform: scale(1.1);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
+/* Modal close button and its hover state are completely hidden */
 
 .modal form {
   padding: 28px;

@@ -18,11 +18,17 @@ const CallSchedule = () => {
   // Remove filterStatus state and dropdown
   // const [filterStatus, setFilterStatus] = useState('all');
   const [deletingSchedules, setDeletingSchedules] = useState(new Set());
+  const [submittingSchedule, setSubmittingSchedule] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   // Fetch leads and call schedules
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      // Get user role from token
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      setUserRole(tokenPayload.role);
       
       // Fetch leads - request all leads without pagination
       const leadsResponse = await fetch(getApiUrl('api/leads?limit=10000'), {
@@ -42,12 +48,13 @@ const CallSchedule = () => {
 
       if (leadsResponse.ok) {
         const leadsData = await leadsResponse.json();
+
         setLeads(leadsData.leads);
       }
 
       if (schedulesResponse.ok) {
         const schedulesData = await schedulesResponse.json();
-        console.log('Fetched call schedules:', schedulesData);
+
         setCallSchedules(schedulesData.callSchedules);
       }
     } catch (error) {
@@ -96,15 +103,37 @@ const CallSchedule = () => {
       );
     };
     
+    // Listen for call schedule creation events
+    const handleCallScheduleCreated = (event) => {
+      const { callSchedule } = event.detail;
+
+      // Refresh data to get the latest call schedules
+      fetchData();
+    };
+    
+    // Listen for call schedule deletion events
+    const handleCallScheduleDeleted = (event) => {
+      const { scheduleId } = event.detail;
+
+      // Remove the deleted schedule from local state
+      setCallSchedules(prevSchedules => 
+        prevSchedules.filter(schedule => schedule._id !== scheduleId)
+      );
+    };
+    
     window.addEventListener('leadDeleted', handleLeadDeleted);
     window.addEventListener('leadsImported', handleLeadsImported);
     window.addEventListener('leadStatusUpdated', handleLeadStatusUpdated);
+    window.addEventListener('callScheduleCreated', handleCallScheduleCreated);
+    window.addEventListener('callScheduleDeleted', handleCallScheduleDeleted);
     
     return () => {
       clearInterval(interval);
       window.removeEventListener('leadDeleted', handleLeadDeleted);
       window.removeEventListener('leadsImported', handleLeadsImported);
       window.removeEventListener('leadStatusUpdated', handleLeadStatusUpdated);
+      window.removeEventListener('callScheduleCreated', handleCallScheduleCreated);
+      window.removeEventListener('callScheduleDeleted', handleCallScheduleDeleted);
     };
   }, []);
 
@@ -121,9 +150,17 @@ const CallSchedule = () => {
   const handleSubmitSchedule = async (e) => {
     e.preventDefault();
     
+    // Prevent double submission
+    if (submittingSchedule) {
+
+      return;
+    }
+    
+    setSubmittingSchedule(true);
+    
     try {
       const token = localStorage.getItem('token');
-      console.log('Submitting schedule form:', scheduleForm);
+
       
       const response = await fetch(getApiUrl('api/call-schedules'), {
         method: 'POST',
@@ -136,18 +173,34 @@ const CallSchedule = () => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Call scheduled successfully:', result);
+
         alert('Call scheduled successfully!');
         setShowScheduleModal(false);
-        fetchData(); // Refresh data
+        setScheduleForm({ leadId: '', scheduledDate: '', scheduledTime: '' });
+        
+        // Dispatch event to notify other components about the new call schedule
+        window.dispatchEvent(new CustomEvent('callScheduleCreated', {
+          detail: { callSchedule: result.callSchedule }
+        }));
+        
+        // Refresh data immediately
+        fetchData();
       } else {
         const error = await response.json();
         console.error('Failed to schedule call:', error);
-        alert(error.message || 'Failed to schedule call');
+        
+        // Show more detailed error message
+        let errorMessage = error.message || 'Failed to schedule call';
+        if (error.existingCall) {
+          errorMessage = `A call is already scheduled for this lead at ${error.existingCall.scheduledTime} on ${new Date(error.existingCall.scheduledDate).toLocaleDateString()}`;
+        }
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Error scheduling call:', error);
-      alert('Failed to schedule call');
+      alert('Failed to schedule call. Please try again.');
+    } finally {
+      setSubmittingSchedule(false);
     }
   };
 
@@ -164,7 +217,7 @@ const CallSchedule = () => {
       setCallSchedules(prev => prev.filter(schedule => schedule._id !== scheduleId));
       
       const token = localStorage.getItem('token');
-      console.log('Deleting call schedule:', scheduleId);
+
       
       const response = await fetch(getApiUrl(`api/call-schedules/${scheduleId}`), {
         method: 'DELETE',
@@ -176,8 +229,14 @@ const CallSchedule = () => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Call schedule deleted successfully:', result);
+
         alert('Call schedule deleted successfully!');
+        
+        // Dispatch event to notify other components about the deleted call schedule
+        window.dispatchEvent(new CustomEvent('callScheduleDeleted', {
+          detail: { scheduleId }
+        }));
+        
         // No need to fetchData() since we already updated the UI optimistically
       } else {
         const error = await response.json();
@@ -247,7 +306,7 @@ const CallSchedule = () => {
           }
         }
       } catch (error) {
-        console.log('No existing chat found, starting new conversation');
+
       }
     } else {
       alert('Lead information not found for this call schedule');
@@ -439,77 +498,101 @@ const CallSchedule = () => {
         <div className="dashboard-header">
           <div className="welcome-section">
             <h2>Innovatiq Media Call Schedule 📞</h2>
-            <p>Schedule and manage calls with your Innovatiq Media leads</p>
+            <p>
+              {userRole === 'admin' 
+                ? 'View all scheduled calls across the system' 
+                : 'Schedule and manage calls with your Innovatiq Media leads'
+              }
+            </p>
           </div>
           {/* Removed filter dropdown */}
         </div>
 
-        {/* Leads Table */}
-        <div className="content-section">
-          <div className="section-header">
-            <div className="section-title">
-              <h2>Available Leads</h2>
-              <p>Click "Schedule Call" to set up a call with any lead (Qualified leads are excluded as they become customers)</p>
+        {/* Leads Table - Only show for non-admin users */}
+        {userRole !== 'admin' && (
+          <div className="content-section">
+            <div className="section-header">
+              <div className="section-title">
+                <h2>Available Leads</h2>
+                <p>Click "Schedule Call" to set up a call with any lead (Qualified leads are automatically converted to customers and excluded)</p>
+              </div>
+            </div>
+            
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Uploaded By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredLeads.filter(lead => lead.status !== 'Qualified').map((lead) => (
+                    <tr key={lead._id}>
+                      <td>
+                        <div className="lead-name">
+                          <div className="lead-avatar">
+                            {lead.name.charAt(0).toUpperCase()}
+                          </div>
+                          {lead.name}
+                        </div>
+                      </td>
+                      <td>{lead.email}</td>
+                      <td>{lead.phone || 'N/A'}</td>
+                      <td>{lead.company || 'N/A'}</td>
+                      <td>
+                        <span 
+                          className="status-badge"
+                          style={{ backgroundColor: getStatusColor(lead.status) }}
+                        >
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td>
+                        {lead.createdBy && lead.createdBy.name ? (
+                          <span className="uploaded-by">
+                            {lead.createdBy.name}
+                          </span>
+                        ) : (
+                          <span className="uploaded-by unknown" title="User information not available">
+                            System
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <button 
+                          className="schedule-btn"
+                          onClick={() => handleScheduleCall(lead)}
+                        >
+                          <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                          </svg>
+                          Schedule Call
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-          
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Company</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLeads.map((lead) => (
-                  <tr key={lead._id}>
-                    <td>
-                      <div className="lead-name">
-                        <div className="lead-avatar">
-                          {lead.name.charAt(0).toUpperCase()}
-                        </div>
-                        {lead.name}
-                      </div>
-                    </td>
-                    <td>{lead.email}</td>
-                    <td>{lead.phone || 'N/A'}</td>
-                    <td>{lead.company || 'N/A'}</td>
-                    <td>
-                      <span 
-                        className="status-badge"
-                        style={{ backgroundColor: getStatusColor(lead.status) }}
-                      >
-                        {lead.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button 
-                        className="schedule-btn"
-                        onClick={() => handleScheduleCall(lead)}
-                      >
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                        </svg>
-                        Schedule Call
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        )}
 
         {/* Scheduled Calls */}
         <div className="content-section">
           <div className="section-header">
             <h3>Scheduled Calls</h3>
-            <p>Your upcoming and past scheduled calls</p>
+            <p>
+              {userRole === 'admin' 
+                ? 'All upcoming and past scheduled calls across the system' 
+                : 'Your upcoming and past scheduled calls'
+              }
+            </p>
           </div>
           
           <div className="data-table-container">
@@ -520,6 +603,7 @@ const CallSchedule = () => {
                   <th>Date</th>
                   <th>Time</th>
                   <th>Status</th>
+                  {userRole === 'admin' && <th>Scheduled By</th>}
                   <th>Chat</th>
                   <th>Actions</th>
                 </tr>
@@ -548,6 +632,13 @@ const CallSchedule = () => {
                         {schedule.status}
                       </span>
                     </td>
+                    {userRole === 'admin' && (
+                      <td>
+                        <span className="scheduled-by">
+                          {schedule.scheduledBy?.name || 'Unknown'}
+                        </span>
+                      </td>
+                    )}
                     <td>
                       <button 
                         className="chat-btn"
@@ -648,11 +739,19 @@ const CallSchedule = () => {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                      <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                    </svg>
-                    Schedule Call
+                  <button 
+                    type="submit" 
+                    className="btn-primary"
+                    disabled={submittingSchedule}
+                  >
+                    {submittingSchedule ? (
+                      <div className="mini-spinner"></div>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                      </svg>
+                    )}
+                    {submittingSchedule ? 'Scheduling...' : 'Schedule Call'}
                   </button>
                 </div>
               </form>

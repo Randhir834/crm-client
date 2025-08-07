@@ -48,25 +48,10 @@
 }
 
 .call-notification-close {
-  background: none;
-  border: none;
-  font-size: 24.7px; /* Increased by 3% from 24px */
-  color: #95a5a6;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  display: none; /* Hide the entire button */
 }
 
-.call-notification-close:hover {
-  background: #f8f9fa;
-  color: #2c3e50;
-}
+/* Call notification close button and its hover state are completely hidden */
 
 .call-notification-content {
   padding: 20px 24px;
@@ -234,4 +219,4 @@
   .call-notification-actions button {
     width: 100%;
   }
-} 
+}

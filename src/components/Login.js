@@ -71,25 +71,17 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
+
     
     if (!validateForm()) {
-      console.log('Form validation failed');
-      return;
-    }
-
-    console.log('Form validation passed, attempting login...');
+              return;
+      }
     setIsSubmitting(true);
     
     try {
       const result = await login(formData);
-      console.log('Login result:', result);
-      
       if (result.success) {
-        console.log('Login successful, navigating to dashboard...');
         navigate('/dashboard');
-      } else {
-        console.log('Login failed:', result.error);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -142,7 +134,7 @@ const Login = () => {
               )}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="auth-form" onClick={() => console.log('Form clicked')}>
+          <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
               <label htmlFor="email">
                 <div className="label-icon">
@@ -211,7 +203,7 @@ const Login = () => {
               type="submit" 
               className="auth-button"
               disabled={isSubmitting}
-              onClick={() => console.log('Login button clicked')}
+              
             >
               {isSubmitting ? (
                 <>
