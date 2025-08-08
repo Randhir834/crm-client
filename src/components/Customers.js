@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 import { getApiUrl } from '../config/api';
-import './Customers.css';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
