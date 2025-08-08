@@ -31,7 +31,8 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post(getApiUrl('api/auth/forgot-password'), {
-        email: email
+        email: email,
+        clientUrl: window.location.origin
       });
 
       setMessage(response.data.message);
