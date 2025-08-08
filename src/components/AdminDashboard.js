@@ -184,9 +184,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const getTotalUsage = (user) => {
-    const totalTime = user.sessions?.totalSessionTime || 0;
-    return formatDuration(totalTime);
+  const getDailyUsage = (user) => {
+    const dailyTime = user.sessions?.totalSessionTime || 0;
+    return formatDuration(dailyTime);
   };
 
   if (loading) {
@@ -328,8 +328,9 @@ const AdminDashboard = () => {
                     <th>Email</th>
                     <th>Role</th>
                     <th>Status</th>
+                    <th>First Login Time</th>
                     <th>Last Activity</th>
-                    <th>Total Usage</th>
+                    <th>Daily Usage</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -354,6 +355,11 @@ const AdminDashboard = () => {
                       </td>
                       <td>
                         <div className="activity-info">
+                          <div className="activity-time">{formatDate(user.firstLoginTime)}</div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="activity-info">
                           <div className="activity-time">{getLastActivity(user)}</div>
                           {user.sessions?.current && (
                             <div className="current-session">
@@ -364,7 +370,7 @@ const AdminDashboard = () => {
                       </td>
                       <td>
                         <div className="usage-info">
-                          <div className="total-usage">{getTotalUsage(user)}</div>
+                          <div className="daily-usage">{getDailyUsage(user)}</div>
                           {user.sessions?.lastCompleted && (
                             <div className="last-session">
                               <small>Last: {formatDuration(user.sessions.lastCompleted.duration)}</small>
