@@ -454,16 +454,14 @@ const Leads = () => {
           setStats(statsData.stats);
         }
 
-        // Refresh the page automatically after successful deletion
-        window.location.reload();
+        // Lead deleted successfully - no page refresh needed
       } else {
-        // Refresh the page on error too
-        window.location.reload();
+        // Error deleting lead - no page refresh needed
+        console.error('Failed to delete lead');
       }
     } catch (error) {
       console.error('Delete error:', error);
-      // Refresh the page on error
-      window.location.reload();
+      // Error occurred - no page refresh needed
     } finally {
       // Remove loading state for specific lead
       setDeletingLeads(prev => {
