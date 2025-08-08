@@ -53,10 +53,15 @@ const Leads = () => {
       if (response.ok) {
         const data = await response.json();
         const leadsData = data.leads || [];
-        setLeads(leadsData);
         
-        // Debug: Log all leads data
-
+        // Only update state if data has actually changed to prevent flicker
+        setLeads(prevLeads => {
+          // Check if the data is actually different
+          if (JSON.stringify(prevLeads) === JSON.stringify(leadsData)) {
+            return prevLeads; // No change needed
+          }
+          return leadsData;
+        });
         
         // Maintain current filter when refreshing
         let filtered;
@@ -66,14 +71,6 @@ const Leads = () => {
           filtered = leadsData.filter(lead => lead.status === activeFilter);
         }
         setFilteredLeads(filtered);
-
-        
-
-        
-        // Show success message for automatic refresh
-        if (isAutomaticRefresh) {
-  
-        }
       } else {
         console.error('Failed to fetch leads:', response.status, response.statusText);
       }
@@ -100,7 +97,13 @@ const Leads = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setStats(data.stats);
+        setStats(prevStats => {
+          // Only update if stats have actually changed
+          if (JSON.stringify(prevStats) === JSON.stringify(data.stats)) {
+            return prevStats;
+          }
+          return data.stats;
+        });
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -492,15 +495,8 @@ const Leads = () => {
         // Get the updated lead data from the response
         const responseData = await response.json();
         const updatedLead = responseData.lead;
-        setLeads(prevLeads => 
-          prevLeads.map(lead => 
-            lead._id === leadId 
-              ? { ...lead, status: newStatus }
-              : lead
-          )
-        );
-
-        // Update the main leads list with the new status immediately
+        
+        // Single state update to prevent flicker
         setLeads(prevLeads => {
           const updatedLeads = prevLeads.map(lead => 
             lead._id === leadId 
@@ -511,8 +507,6 @@ const Leads = () => {
           // Immediately update filtered leads based on the new leads array
           const newFilteredLeads = updatedLeads.filter(lead => lead.status === activeFilter);
           setFilteredLeads(newFilteredLeads);
-          
-          
           
           if (activeFilter === 'New' && newStatus !== 'New') {
             console.log(`Lead moved from New to ${newStatus}. Next new lead is now immediately visible.`);
@@ -534,7 +528,13 @@ const Leads = () => {
 
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
-          setStats(statsData.stats);
+          setStats(prevStats => {
+            // Only update if stats have actually changed
+            if (JSON.stringify(prevStats) === JSON.stringify(statsData.stats)) {
+              return prevStats;
+            }
+            return statsData.stats;
+          });
         }
 
         // Dispatch custom event to notify other components about the status change
@@ -562,10 +562,7 @@ const Leads = () => {
           }
         }
 
-        // Refresh data in background to ensure everything is in sync
-        setTimeout(async () => {
-          await fetchLeads(true);
-        }, 500);
+        // No background refresh needed - state is already updated correctly
 
       } else {
         const data = await response.json();
