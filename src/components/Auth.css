@@ -392,14 +392,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 350px;
-  height: 140px;
+  width: 80px;
+  height: 80px;
   transition: all 0.3s ease;
-  padding: 16px;
+  padding: 8px;
 }
 
 .logo-icon:hover {
-  transform: scale(1.02);
+  transform: scale(1.05);
 }
 
 .logo-icon svg {
@@ -415,6 +415,40 @@ body {
   border-radius: 8px;
   max-width: 310px;
   max-height: 112px;
+}
+
+/* Animated Logo Styles */
+.animated-logo {
+  filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.2));
+  transition: all 0.3s ease;
+}
+
+.logo-icon:hover .animated-logo {
+  filter: drop-shadow(0 6px 20px rgba(102, 126, 234, 0.3));
+  transform: scale(1.02);
+}
+
+.animated-logo circle,
+.animated-logo path,
+.animated-logo text,
+.animated-logo line {
+  transition: all 0.3s ease;
+}
+
+.animated-logo:hover circle {
+  animation-duration: 1.5s;
+}
+
+.animated-logo:hover path {
+  animation-duration: 1.5s;
+}
+
+.animated-logo:hover text {
+  animation-duration: 1.5s;
+}
+
+.animated-logo:hover line {
+  animation-duration: 1.5s;
 }
 
 .auth-card h2 {
@@ -990,9 +1024,9 @@ body {
 }
 
 .login-left .logo-icon {
-  width: 180px;
+  width: 80px;
   height: 80px;
-  padding: 0;
+  padding: 8px;
 }
 
 .login-left h2 {
@@ -1103,6 +1137,14 @@ body {
   display: block;
   margin: 0 auto;
   filter: drop-shadow(0 2px 8px rgba(251,191,36,0.18));
+  width: 64px;
+  height: 64px;
+}
+
+.animated-svg-logo-reset {
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 2px 8px rgba(102,126,234,0.2));
   width: 64px;
   height: 64px;
 }

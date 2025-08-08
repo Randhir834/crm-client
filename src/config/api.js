@@ -1,10 +1,10 @@
 // API Configuration
 const API_CONFIG = {
-  // Use environment variable if available, otherwise use localhost for development
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:5001',
+  // Using localhost for development - environment variable commented out
+  BASE_URL: 'http://localhost:5001',
   
-  // For local development, we're using localhost:5001 by default
-  // For production, set REACT_APP_API_URL to the deployed server URL
+  // For local development, we're using localhost:5001
+  // REACT_APP_API_URL environment variable is commented out
 };
 
 export const API_BASE_URL = API_CONFIG.BASE_URL;

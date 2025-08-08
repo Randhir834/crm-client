@@ -61,8 +61,8 @@ const AdminDashboard = () => {
         console.error('Failed to fetch stats:', statsResponse.status);
       }
 
-      // Fetch all users
-      const usersResponse = await fetch(getApiUrl('api/auth/users'), {
+      // Fetch all users with session data
+      const usersResponse = await fetch(getApiUrl('api/sessions/all'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -73,7 +73,7 @@ const AdminDashboard = () => {
         const usersData = await usersResponse.json();
         setUsers(usersData.users || []);
       } else {
-        console.error('Failed to fetch users:', usersResponse.status);
+        console.error('Failed to fetch users with sessions:', usersResponse.status);
       }
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -119,8 +119,6 @@ const AdminDashboard = () => {
     }
   };
 
-
-
   const formatDate = (dateString) => {
     if (!dateString) return 'Never';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -131,8 +129,65 @@ const AdminDashboard = () => {
       minute: '2-digit'
     });
   };
-  
 
+  const formatDuration = (milliseconds) => {
+    if (!milliseconds || milliseconds === 0) return '0m';
+    
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) {
+      return `${days}d ${hours % 24}h ${minutes % 60}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
+  const getSessionStatus = (user) => {
+    if (user.sessions?.current) {
+      return (
+        <span className="status-badge online">
+          <span className="status-dot"></span>
+          Online
+        </span>
+      );
+    } else if (user.sessions?.lastCompleted) {
+      return (
+        <span className="status-badge offline">
+          <span className="status-dot"></span>
+          Offline
+        </span>
+      );
+    } else {
+      return (
+        <span className="status-badge never-logged">
+          <span className="status-dot"></span>
+          Never Logged In
+        </span>
+      );
+    }
+  };
+
+  const getLastActivity = (user) => {
+    if (user.sessions?.current) {
+      return formatDate(user.sessions.current.loginTime);
+    } else if (user.sessions?.lastCompleted) {
+      return formatDate(user.sessions.lastCompleted.logoutTime);
+    } else {
+      return 'Never';
+    }
+  };
+
+  const getTotalUsage = (user) => {
+    const totalTime = user.sessions?.totalSessionTime || 0;
+    return formatDuration(totalTime);
+  };
 
   if (loading) {
     return (
@@ -202,7 +257,7 @@ const AdminDashboard = () => {
               </svg>
             </div>
             <div className="stat-content">
-              <h3>Active Users (7d)</h3>
+              <h3>Active Users</h3>
               <div className="stat-number">{stats.activeUsers}</div>
             </div>
           </div>
@@ -272,6 +327,9 @@ const AdminDashboard = () => {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Activity</th>
+                    <th>Total Usage</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -291,6 +349,30 @@ const AdminDashboard = () => {
                           {user.role}
                         </span>
                       </td>
+                      <td>
+                        {getSessionStatus(user)}
+                      </td>
+                      <td>
+                        <div className="activity-info">
+                          <div className="activity-time">{getLastActivity(user)}</div>
+                          {user.sessions?.current && (
+                            <div className="current-session">
+                              <small>Current session: {formatDuration(Date.now() - new Date(user.sessions.current.loginTime).getTime())}</small>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="usage-info">
+                          <div className="total-usage">{getTotalUsage(user)}</div>
+                          {user.sessions?.lastCompleted && (
+                            <div className="last-session">
+                              <small>Last: {formatDuration(user.sessions.lastCompleted.duration)}</small>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
                     </tr>
                   ))}
                 </tbody>

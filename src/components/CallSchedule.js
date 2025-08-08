@@ -55,6 +55,17 @@ const CallSchedule = () => {
       if (schedulesResponse.ok) {
         const schedulesData = await schedulesResponse.json();
 
+        console.log('Fetched call schedules:', {
+          count: schedulesData.callSchedules?.length || 0,
+          userRole: tokenPayload.role,
+          schedules: schedulesData.callSchedules?.map(s => ({
+            id: s._id,
+            leadName: s.leadId?.name,
+            scheduledBy: s.scheduledBy?.name,
+            status: s.status
+          })) || []
+        });
+
         setCallSchedules(schedulesData.callSchedules);
       }
     } catch (error) {
@@ -500,7 +511,7 @@ const CallSchedule = () => {
             <h2>Innovatiq Media Call Schedule 📞</h2>
             <p>
               {userRole === 'admin' 
-                ? 'View all scheduled calls across the system' 
+                ? `View all scheduled calls across the system (${callSchedules.length} total calls)` 
                 : 'Schedule and manage calls with your Innovatiq Media leads'
               }
             </p>
@@ -589,7 +600,7 @@ const CallSchedule = () => {
             <h3>Scheduled Calls</h3>
             <p>
               {userRole === 'admin' 
-                ? 'All upcoming and past scheduled calls across the system' 
+                ? `All upcoming and past scheduled calls across the system (${callSchedules.length} total calls)` 
                 : 'Your upcoming and past scheduled calls'
               }
             </p>
@@ -600,8 +611,10 @@ const CallSchedule = () => {
               <thead>
                 <tr>
                   <th>Lead Name</th>
+                  {userRole === 'admin' && <th>Lead Email</th>}
                   <th>Date</th>
                   <th>Time</th>
+                  {userRole === 'admin' && <th>Duration</th>}
                   <th>Status</th>
                   {userRole === 'admin' && <th>Scheduled By</th>}
                   <th>Chat</th>
@@ -622,8 +635,22 @@ const CallSchedule = () => {
                         )}
                       </div>
                     </td>
+                    {userRole === 'admin' && (
+                      <td>
+                        <span className="lead-email">
+                          {schedule.leadId && schedule.leadId.email ? schedule.leadId.email : 'N/A'}
+                        </span>
+                      </td>
+                    )}
                     <td>{formatDate(schedule.scheduledDate)}</td>
                     <td>{formatTime(schedule.scheduledTime)}</td>
+                    {userRole === 'admin' && (
+                      <td>
+                        <span className="duration-badge">
+                          {schedule.duration || 30} min
+                        </span>
+                      </td>
+                    )}
                     <td>
                       <span 
                         className="status-badge"
@@ -670,11 +697,16 @@ const CallSchedule = () => {
               </tbody>
             </table>
             {callSchedules.length === 0 && (
-                          <div className="empty-state">
-              <div className="empty-icon">📞</div>
-              <h3>No Scheduled Calls</h3>
-              <p>Schedule your first call with an Innovatiq Media lead to get started!</p>
-            </div>
+              <div className="empty-state">
+                <div className="empty-icon">📞</div>
+                <h3>No Scheduled Calls</h3>
+                <p>
+                  {userRole === 'admin' 
+                    ? 'No calls have been scheduled by any users in the system yet.' 
+                    : 'Schedule your first call with an Innovatiq Media lead to get started!'
+                  }
+                </p>
+              </div>
             )}
           </div>
         </div>

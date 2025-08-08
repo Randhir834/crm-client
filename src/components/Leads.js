@@ -5,7 +5,7 @@ import { getApiUrl } from '../config/api';
 import './Dashboard.css';
 
 const Leads = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [leads, setLeads] = useState([]);
   const [initialLoad, setInitialLoad] = useState(true); // Track initial load
   const [uploading, setUploading] = useState(false); // Separate state for file upload
@@ -27,6 +27,12 @@ const Leads = () => {
   const [activeFilter, setActiveFilter] = useState('New');
   const [processingLead, setProcessingLead] = useState(null);
   const fileInputRef = useRef(null);
+  
+  // New state for user selection modal
+  const [showUserSelectionModal, setShowUserSelectionModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Fetch leads from API
   const fetchLeads = async (isAutomaticRefresh = false) => {
@@ -98,6 +104,30 @@ const Leads = () => {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  // Fetch users for assignment (admin only)
+  const fetchUsers = async () => {
+    if (!isAdmin) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl('api/auth/users'), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      } else {
+        console.error('Failed to fetch users:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
     }
   };
 
@@ -179,7 +209,36 @@ const Leads = () => {
   }, [activeFilter, leads]);
 
   const handleImport = () => {
+    if (isAdmin) {
+      // For admin, show user selection modal first
+      fetchUsers();
+      setShowUserSelectionModal(true);
+    } else {
+      // For regular users, directly trigger file selection
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleUserSelection = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    setShowUserSelectionModal(false);
+    
+    // Clear the file input
+    event.target.value = '';
+  };
+
+  const handleUserConfirm = () => {
+    if (!selectedUser) {
+      alert('Please select a user to assign the leads to.');
+      return;
+    }
+    
+    // Trigger file selection after user is selected
     fileInputRef.current?.click();
+    setShowUserSelectionModal(false);
   };
 
   const handleFileUpload = async (event) => {
@@ -221,6 +280,11 @@ const Leads = () => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
+    
+    // Add assigned user if admin selected one
+    if (isAdmin && selectedUser) {
+      formData.append('assignedTo', selectedUser);
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -237,21 +301,35 @@ const Leads = () => {
       if (response.ok) {
         alert(`Successfully imported ${data.count} leads!`);
         
+        // Clear the selected user after successful upload
+        setSelectedUser(null);
+        
+        // Immediately add the new leads to the current list
+        if (data.leads && data.leads.length > 0) {
+          const newLeads = data.leads.map(lead => ({
+            ...lead,
+            createdAt: new Date().toISOString() // Ensure proper date formatting
+          }));
+          
+          // Add new leads to the beginning of the list
+          setLeads(prevLeads => [...newLeads, ...prevLeads]);
+          
+          // Update filtered leads based on current filter
+          if (activeFilter === 'All') {
+            setFilteredLeads(prevFiltered => [...newLeads, ...prevFiltered]);
+          } else {
+            const newFilteredLeads = newLeads.filter(lead => lead.status === activeFilter);
+            setFilteredLeads(prevFiltered => [...newFilteredLeads, ...prevFiltered]);
+          }
+        }
+        
+        // Update stats immediately
+        await fetchStats();
+        
         // Dispatch custom event to notify other components about new leads
         window.dispatchEvent(new CustomEvent('leadsImported', { 
           detail: { count: data.count } 
         }));
-        
-        // Refresh the leads list and ensure New leads are visible
-        await fetchLeads();
-        await fetchStats();
-        
-        // If we're currently on New leads filter, refresh the filtered view
-        if (activeFilter === 'New') {
-          const newLeads = leads.filter(lead => lead.status === 'New');
-          setFilteredLeads(newLeads);
-
-        }
       } else {
         console.error('❌ Upload failed:', data);
         
@@ -774,7 +852,7 @@ const Leads = () => {
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Status</th>
-                    <th>Source</th>
+                    <th>Assigned To</th>
                     <th>Uploaded By</th>
                     <th>Created</th>
                     <th>Actions</th>
@@ -794,22 +872,32 @@ const Leads = () => {
                       <td>{lead.company}</td>
                       <td>{lead.email}</td>
                       <td>{lead.phone}</td>
-                                          <td>
-                      <select
-                        className={`status-select ${processingLead === lead._id ? 'processing' : ''}`}
-                        value={lead.status}
-                        onChange={(e) => handleStatusChange(lead._id, e.target.value)}
-                        style={{ backgroundColor: getStatusColor(lead.status) }}
-                        disabled={processingLead === lead._id}
-                      >
-                        <option value="New">New</option>
-                        <option value="Qualified">Qualified</option>
-                        <option value="Negotiation">Negotiation</option>
-                        <option value="Closed">Closed</option>
-                        <option value="Lost">Lost</option>
-                      </select>
-                    </td>
-                      <td>{lead.source}</td>
+                      <td>
+                        <select
+                          className={`status-select ${processingLead === lead._id ? 'processing' : ''}`}
+                          value={lead.status}
+                          onChange={(e) => handleStatusChange(lead._id, e.target.value)}
+                          style={{ backgroundColor: getStatusColor(lead.status) }}
+                          disabled={processingLead === lead._id}
+                        >
+                          <option value="New">New</option>
+                          <option value="Qualified">Qualified</option>
+                          <option value="Negotiation">Negotiation</option>
+                          <option value="Closed">Closed</option>
+                          <option value="Lost">Lost</option>
+                        </select>
+                      </td>
+                      <td>
+                        {lead.assignedTo && lead.assignedTo.name ? (
+                          <span className="uploaded-by assigned" title={`Assigned to ${lead.assignedTo.name}`}>
+                            {lead.assignedTo.name}
+                          </span>
+                        ) : (
+                          <span className="uploaded-by unassigned" title="No user assigned">
+                            Unassigned
+                          </span>
+                        )}
+                      </td>
                       <td>
                         {lead.createdBy && lead.createdBy.name ? (
                           <span className="uploaded-by">
@@ -1080,6 +1168,73 @@ const Leads = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* User Selection Modal */}
+        {showUserSelectionModal && (
+          <div className="modal-overlay" onClick={() => setShowUserSelectionModal(false)}>
+            <div className="user-selection-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Select User to Assign Leads</h3>
+                <button 
+                  className="modal-close"
+                  onClick={() => setShowUserSelectionModal(false)}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="user-selection-content">
+                <p>Please select a user to assign the imported leads to:</p>
+                
+                <div className="user-select-wrapper">
+                  <label className="user-select-label">Select User *</label>
+                  <select
+                    className="user-select"
+                    value={selectedUser || ''}
+                    onChange={(e) => setSelectedUser(e.target.value)}
+                    required
+                  >
+                    <option value="">Choose a user...</option>
+                    {users.map((user) => (
+                      <option key={user._id} value={user._id}>
+                        {user.name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="user-selection-help">
+                  <h4>Note:</h4>
+                  <ul>
+                    <li>The selected user will be assigned to all imported leads</li>
+                    <li>Only you (admin) and the assigned user will be able to see these leads</li>
+                    <li>You can change the assignment later by editing individual leads</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="user-selection-actions">
+                <button 
+                  type="button"
+                  className="user-selection-btn secondary"
+                  onClick={() => setShowUserSelectionModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  className="user-selection-btn primary"
+                  onClick={handleUserConfirm}
+                  disabled={!selectedUser}
+                >
+                  Continue
+                </button>
+              </div>
             </div>
           </div>
         )}

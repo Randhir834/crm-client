@@ -3,7 +3,6 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getApiUrl } from '../config/api';
 import './Auth.css';
-import logoImage from '../assets/logo.png';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -114,16 +113,55 @@ const ResetPassword = () => {
         <div className="auth-header">
           <div className="auth-logo">
             <div className="logo-icon">
-              <img 
-                src={logoImage} 
-                alt="innovatiQ Media Logo" 
-                className="auth-logo-image"
-                onLoad={() => console.log('Logo image loaded successfully')}
-                onError={(e) => {
-                  console.log('Logo image failed to load');
-                  console.log('Image src:', e.target.src);
-                }}
-              />
+              <svg width="64" height="64" viewBox="0 0 64 64" className="animated-svg-logo-reset">
+                <g>
+                  {/* Lock body */}
+                  <rect x="16" y="28" width="32" height="24" rx="6" fill="#23272f" stroke="#111827" strokeWidth="3">
+                    <animate attributeName="opacity" values="1;0.8;1" dur="2s" repeatCount="indefinite" />
+                  </rect>
+                  
+                  {/* Lock shackle */}
+                  <path d="M24 28v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#0ea5e9" strokeWidth="4">
+                    <animate attributeName="d" values="M24 28v-6a8 8 0 0 1 16 0v6;M24 28v-10a8 8 0 0 1 16 0v10;M24 28v-6a8 8 0 0 1 16 0v6" dur="1.8s" repeatCount="indefinite" />
+                  </path>
+                  
+                  {/* Keyhole */}
+                  <circle cx="32" cy="40" r="3" fill="#0ea5e9">
+                    <animate attributeName="r" values="3;5;3" dur="1.8s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.7;1" dur="1.8s" repeatCount="indefinite" />
+                  </circle>
+                  
+                  {/* Key */}
+                  <g transform="translate(45, 20)">
+                    <rect x="0" y="8" width="12" height="6" rx="3" fill="#22c55e">
+                      <animate attributeName="width" values="12;16;12" dur="1.6s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="1;0.8;1" dur="1.6s" repeatCount="indefinite" />
+                    </rect>
+                    <rect x="2" y="0" width="8" height="8" rx="4" fill="#22c55e">
+                      <animate attributeName="r" values="4;6;4" dur="1.6s" repeatCount="indefinite" />
+                    </rect>
+                    <rect x="4" y="2" width="4" height="4" rx="2" fill="white">
+                      <animate attributeName="opacity" values="1;0.5;1" dur="1.6s" repeatCount="indefinite" />
+                    </rect>
+                  </g>
+                  
+                  {/* Arrow pointing to lock */}
+                  <path d="M42 32 L50 32" stroke="#667eea" strokeWidth="2" strokeLinecap="round">
+                    <animate attributeName="stroke-dasharray" values="0,10;5,5;10,0" dur="1.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+                  </path>
+                  
+                  {/* Sparkle effects */}
+                  <circle cx="50" cy="25" r="1" fill="#667eea" opacity="0.6">
+                    <animate attributeName="r" values="1;2;1" dur="1.2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="52" cy="28" r="0.8" fill="#667eea" opacity="0.4">
+                    <animate attributeName="r" values="0.8;1.5;0.8" dur="1.4s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.4s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+              </svg>
             </div>
           </div>
           <h2>Reset Password</h2>
