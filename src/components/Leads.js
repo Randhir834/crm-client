@@ -309,11 +309,14 @@ const Leads = () => {
         // Clear the selected user after successful upload
         setSelectedUser(null);
         
-        // Immediately add the new leads to the current list
+        // Immediately add the new leads to the current list with proper user data
         if (data.leads && data.leads.length > 0) {
           const newLeads = data.leads.map(lead => ({
             ...lead,
-            createdAt: new Date().toISOString() // Ensure proper date formatting
+            createdAt: new Date().toISOString(), // Ensure proper date formatting
+            // Ensure proper user assignment data
+            assignedTo: lead.assignedTo || (selectedUser ? { _id: selectedUser, name: users.find(u => u._id === selectedUser)?.name || 'Unknown User' } : null),
+            createdBy: lead.createdBy || { _id: user._id, name: user.name, email: user.email }
           }));
           
           // Add new leads to the beginning of the list
@@ -327,6 +330,9 @@ const Leads = () => {
             setFilteredLeads(prevFiltered => [...newFilteredLeads, ...prevFiltered]);
           }
         }
+        
+        // Fetch fresh data to ensure everything is properly loaded
+        await fetchLeads(true);
         
         // Update stats immediately
         await fetchStats();
@@ -880,9 +886,9 @@ const Leads = () => {
                         </select>
                       </td>
                       <td>
-                        {lead.assignedTo && lead.assignedTo.name ? (
-                          <span className="uploaded-by assigned" title={`Assigned to ${lead.assignedTo.name}`}>
-                            {lead.assignedTo.name}
+                        {lead.assignedTo && (lead.assignedTo.name || lead.assignedTo._id) ? (
+                          <span className="uploaded-by assigned" title={`Assigned to ${lead.assignedTo.name || 'User'}`}>
+                            {lead.assignedTo.name || 'User'}
                           </span>
                         ) : (
                           <span className="uploaded-by unassigned" title="No user assigned">
@@ -891,9 +897,9 @@ const Leads = () => {
                         )}
                       </td>
                       <td>
-                        {lead.createdBy && lead.createdBy.name ? (
+                        {lead.createdBy && (lead.createdBy.name || lead.createdBy._id) ? (
                           <span className="uploaded-by">
-                            {lead.createdBy.name}
+                            {lead.createdBy.name || 'User'}
                           </span>
                         ) : (
                           <span className="uploaded-by unknown" title="User information not available">
