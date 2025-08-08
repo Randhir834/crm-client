@@ -33,6 +33,10 @@ const Leads = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState(null);
 
   // Fetch leads from API
   const fetchLeads = async (isAutomaticRefresh = false) => {
@@ -411,9 +415,17 @@ const Leads = () => {
   };
 
   const handleDeleteLead = async (leadId) => {
-    if (!window.confirm('Are you sure you want to delete this lead?')) {
-      return;
-    }
+    // Show confirmation modal instead of window.confirm
+    setLeadToDelete(leadId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!leadToDelete) return;
+    
+    const leadId = leadToDelete;
+    setShowDeleteModal(false);
+    setLeadToDelete(null);
 
     // Set loading state for specific lead
     setDeletingLeads(prev => new Set(prev).add(leadId));
@@ -1230,6 +1242,60 @@ const Leads = () => {
                   disabled={!selectedUser}
                 >
                   Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+            <div className="delete-confirmation-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Confirm Delete</h3>
+                <button 
+                  className="modal-close"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="delete-confirmation-content">
+                <div className="delete-warning">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="warning-icon">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                  </svg>
+                  <h4>Are you sure you want to delete this lead?</h4>
+                  <p>This action cannot be undone. The lead will be permanently removed from the system.</p>
+                </div>
+              </div>
+              
+              <div className="delete-confirmation-actions">
+                <button 
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  className="btn-danger"
+                  onClick={confirmDelete}
+                  disabled={deletingLeads.has(leadToDelete)}
+                >
+                  {deletingLeads.has(leadToDelete) ? (
+                    <>
+                      <div className="mini-spinner"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete Lead'
+                  )}
                 </button>
               </div>
             </div>
