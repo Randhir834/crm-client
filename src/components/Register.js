@@ -126,29 +126,7 @@ const Register = () => {
         )}
         <div className="auth-header">
           <div style={{display: 'flex', justifyContent: 'center', marginBottom: 24}}>
-            <svg width="64" height="64" viewBox="0 0 64 64" className="animated-svg-logo-register">
-              <g>
-                {/* User head */}
-                <circle cx="32" cy="24" r="10" fill="#0ea5e9">
-                  <animate attributeName="r" values="10;12;10" dur="1.4s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="1;0.8;1" dur="1.4s" repeatCount="indefinite" />
-                </circle>
-                {/* User body */}
-                <ellipse cx="32" cy="42" rx="16" ry="10" fill="#23272f" opacity="0.85">
-                  <animate attributeName="rx" values="16;18;16" dur="1.4s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.85;1;0.85" dur="1.4s" repeatCount="indefinite" />
-                </ellipse>
-                {/* Plus sign */}
-                <g>
-                  <rect x="44" y="36" width="12" height="4" rx="2" fill="#22c55e">
-                    <animate attributeName="width" values="12;16;12" dur="1.4s" repeatCount="indefinite" />
-                  </rect>
-                  <rect x="49" y="31" width="4" height="14" rx="2" fill="#22c55e">
-                    <animate attributeName="height" values="14;18;14" dur="1.4s" repeatCount="indefinite" />
-                  </rect>
-                </g>
-              </g>
-            </svg>
+            <img src="/logo512.png" alt="Logo" style={{ width: '64px', height: '64px' }} />
           </div>
           <h2>Create New Account</h2>
           <p className="auth-subtitle">

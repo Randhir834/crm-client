@@ -95,20 +95,7 @@ const Login = () => {
       <div className="login-left">
         <div className="login-left-center">
           <div style={{display: 'flex', justifyContent: 'center', marginBottom: 24}}>
-            <svg width="64" height="64" viewBox="0 0 64 64" className="animated-svg-logo-dark">
-              <g>
-                {/* Lock body */}
-                <rect x="16" y="28" width="32" height="24" rx="6" fill="#23272f" stroke="#111827" strokeWidth="3" />
-                {/* Lock shackle */}
-                <path d="M24 28v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#0ea5e9" strokeWidth="4">
-                  <animate attributeName="d" values="M24 28v-6a8 8 0 0 1 16 0v6;M24 28v-10a8 8 0 0 1 16 0v10;M24 28v-6a8 8 0 0 1 16 0v6" dur="1.6s" repeatCount="indefinite" />
-                </path>
-                {/* Keyhole */}
-                <circle cx="32" cy="40" r="3" fill="#0ea5e9">
-                  <animate attributeName="r" values="3;5;3" dur="1.6s" repeatCount="indefinite" />
-                </circle>
-              </g>
-            </svg>
+            <img src="/logo512.png" alt="Logo" style={{ width: '64px', height: '64px' }} />
           </div>
           <h2 style={{ textAlign: 'center', width: '100%' }}>Welcome Back</h2>
           <p className="auth-subtitle" style={{ textAlign: 'center', width: '100%', marginBottom: 32 }}>

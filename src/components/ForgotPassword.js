@@ -56,23 +56,7 @@ const ForgotPassword = () => {
       <div className="login-left">
         <div className="login-left-center">
           <div style={{display: 'flex', justifyContent: 'center', marginBottom: 24}}>
-            <svg width="64" height="64" viewBox="0 0 64 64" className="animated-svg-logo-dark">
-              <g>
-                {/* Shield shape */}
-                <path d="M32 8 L56 20 V32 C56 48 32 56 32 56 C32 56 8 48 8 32 V20 Z" fill="#23272f" stroke="#0ea5e9" strokeWidth="3" />
-                {/* Question mark */}
-                <text x="32" y="38" textAnchor="middle" fontSize="24" fill="#fbbf24" fontWeight="bold">
-                  ?
-                  <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
-                  <animate attributeName="font-size" values="24;28;24" dur="1.2s" repeatCount="indefinite" />
-                </text>
-                {/* Glow effect */}
-                <ellipse cx="32" cy="44" rx="10" ry="4" fill="#0ea5e9" opacity="0.15">
-                  <animate attributeName="rx" values="10;14;10" dur="1.2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.15;0.3;0.15" dur="1.2s" repeatCount="indefinite" />
-                </ellipse>
-              </g>
-            </svg>
+            <img src="/logo512.png" alt="Logo" style={{ width: '64px', height: '64px' }} />
           </div>
           <h2 style={{ textAlign: 'center', width: '100%' }}>Forgot Password?</h2>
           <p className="auth-subtitle" style={{ textAlign: 'center', width: '100%', marginBottom: 32 }}>
