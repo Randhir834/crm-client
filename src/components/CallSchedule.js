@@ -535,9 +535,9 @@ const CallSchedule = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Email</th>
+
                     <th>Phone</th>
-                    <th>Company</th>
+
                     <th>Status</th>
                     <th>Uploaded By</th>
                     <th>Actions</th>
@@ -554,9 +554,9 @@ const CallSchedule = () => {
                           {lead.name}
                         </div>
                       </td>
-                      <td>{lead.email}</td>
+
                       <td>{lead.phone || 'N/A'}</td>
-                      <td>{lead.company || 'N/A'}</td>
+  
                       <td>
                         <span 
                           className="status-badge"
@@ -638,8 +638,8 @@ const CallSchedule = () => {
                     </td>
                     {userRole === 'admin' && (
                       <td>
-                        <span className="lead-email">
-                          {schedule.leadId && schedule.leadId.email ? schedule.leadId.email : 'N/A'}
+                        <span className="lead-info">
+                          {schedule.leadId && schedule.leadId.name ? schedule.leadId.name : 'N/A'}
                         </span>
                       </td>
                     )}

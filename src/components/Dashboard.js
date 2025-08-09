@@ -189,7 +189,7 @@ const Dashboard = () => {
             type: 'lead_added',
             message: `New lead "${lead.name}" added`,
             time: new Date(lead.createdAt || lead.created_at || Date.now()),
-            details: `${lead.company || 'No company'} • ${lead.email}`,
+                          details: `Lead added`,
             status: lead.status
           });
 
@@ -244,7 +244,7 @@ const Dashboard = () => {
             type: 'customer_added',
             message: `New customer "${customer.name}" added`,
             time: new Date(customer.createdAt || customer.created_at || Date.now()),
-            details: `${customer.company || 'No company'} • ${customer.email}`,
+                          details: `Customer added`,
             status: customer.status
           });
 

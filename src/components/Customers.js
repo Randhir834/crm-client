@@ -12,9 +12,7 @@ const Customers = () => {
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
-    email: '',
     phone: '',
-    company: '',
     status: 'active',
     notes: ''
   });
@@ -66,12 +64,10 @@ const Customers = () => {
       if (response.ok) {
         setShowAddModal(false);
         setNewCustomer({
-          name: '',
-          email: '',
-          phone: '',
-          company: '',
-          status: 'active',
-          notes: ''
+                name: '',
+      phone: '',
+      status: 'active',
+      notes: ''
         });
         
         // Dispatch event to notify dashboard
@@ -128,9 +124,7 @@ const Customers = () => {
     setEditingCustomer({
       _id: customer._id,
       name: customer.name,
-      email: customer.email,
       phone: customer.phone || '',
-      company: customer.company || '',
       status: customer.status,
       notes: customer.notes || ''
     });
@@ -218,12 +212,10 @@ const Customers = () => {
     try {
       // Create CSV content from customers data
       const csvContent = [
-        ['Name', 'Email', 'Phone', 'Company', 'Status', 'Joined Date', 'Notes'],
+        ['Name', 'Phone', 'Status', 'Joined Date', 'Notes'],
         ...customers.map(customer => [
           customer.name,
-          customer.email,
           customer.phone,
-          customer.company,
           customer.status,
           formatDate(customer.createdAt),
           customer.notes || ''
@@ -320,8 +312,8 @@ const Customers = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Company</th>
-                    <th>Email</th>
+
+
                     <th>Phone</th>
                     <th>Status</th>
                     <th>Joined Date</th>
@@ -339,8 +331,8 @@ const Customers = () => {
                           <span>{customer.name}</span>
                         </div>
                       </td>
-                      <td>{customer.company}</td>
-                      <td>{customer.email}</td>
+
+
                       <td>{customer.phone}</td>
                       <td>
                         <select
@@ -418,15 +410,7 @@ const Customers = () => {
                       required
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Email *</label>
-                    <input
-                      type="email"
-                      value={newCustomer.email}
-                      onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
-                      required
-                    />
-                  </div>
+
                 </div>
                 
                 <div className="form-row">
@@ -438,14 +422,7 @@ const Customers = () => {
                       onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Company</label>
-                    <input
-                      type="text"
-                      value={newCustomer.company}
-                      onChange={(e) => setNewCustomer({...newCustomer, company: e.target.value})}
-                    />
-                  </div>
+
                 </div>
                 
                 <div className="form-group">
@@ -514,15 +491,7 @@ const Customers = () => {
                       required
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Email *</label>
-                    <input
-                      type="email"
-                      value={editingCustomer.email}
-                      onChange={(e) => setEditingCustomer({...editingCustomer, email: e.target.value})}
-                      required
-                    />
-                  </div>
+
                 </div>
                 
                 <div className="form-row">
@@ -534,14 +503,7 @@ const Customers = () => {
                       onChange={(e) => setEditingCustomer({...editingCustomer, phone: e.target.value})}
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Company</label>
-                    <input
-                      type="text"
-                      value={editingCustomer.company}
-                      onChange={(e) => setEditingCustomer({...editingCustomer, company: e.target.value})}
-                    />
-                  </div>
+
                 </div>
                 
                 <div className="form-group">

@@ -316,7 +316,7 @@ const Leads = () => {
             createdAt: new Date().toISOString(), // Ensure proper date formatting
             // Ensure proper user assignment data
             assignedTo: lead.assignedTo || (selectedUser ? { _id: selectedUser, name: users.find(u => u._id === selectedUser)?.name || 'Unknown User' } : null),
-            createdBy: lead.createdBy || { _id: user._id, name: user.name, email: user.email }
+            createdBy: lead.createdBy || { _id: user._id, name: user.name }
           }));
           
           // Add new leads to the beginning of the list
@@ -359,7 +359,7 @@ const Leads = () => {
           console.error('Validation errors:', data.errors);
         }
         if (data.duplicates) {
-          console.error('Duplicate emails:', data.duplicates);
+  
         }
         if (data.error) {
           console.error('File processing error:', data.error);
@@ -512,7 +512,7 @@ const Leads = () => {
           if (activeFilter === 'New' && newStatus !== 'New') {
             console.log(`Lead moved from New to ${newStatus}. Next new lead is now immediately visible.`);
             if (newFilteredLeads.length > 0) {
-              console.log(`Next new lead now visible: ${newFilteredLeads[0].name} (${newFilteredLeads[0].email})`);
+              console.log(`Next new lead now visible: ${newFilteredLeads[0].name}`);
             }
           }
           
@@ -581,9 +581,8 @@ const Leads = () => {
     setEditingLead({
       _id: lead._id,
       name: lead.name,
-      email: lead.email,
+
       phone: lead.phone || '',
-      company: lead.company || '',
       status: lead.status,
       source: lead.source || '',
       notes: lead.notes || ''
@@ -848,8 +847,8 @@ const Leads = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Company</th>
-                    <th>Email</th>
+    
+
                     <th>Phone</th>
                     <th>Status</th>
                     <th>Assigned To</th>
@@ -869,8 +868,8 @@ const Leads = () => {
                           <span>{lead.name}</span>
                         </div>
                       </td>
-                      <td>{lead.company}</td>
-                      <td>{lead.email}</td>
+
+
                       <td>{lead.phone}</td>
                       <td>
                         <select
@@ -1021,34 +1020,15 @@ const Leads = () => {
                   </div>
                 )}
                 
-                {importErrors.duplicates.length > 0 && (
-                  <div className="duplicate-errors">
-                    <h4>Duplicate Emails ({importErrors.duplicates.length})</h4>
-                    <div className="error-list">
-                      {importErrors.duplicates.slice(0, 10).map((email, index) => (
-                        <div key={index} className="error-item">
-                          <span className="error-icon">📧</span>
-                          <span className="error-text">{email}</span>
-                        </div>
-                      ))}
-                      {importErrors.duplicates.length > 10 && (
-                        <div className="error-item">
-                          <span className="error-text">
-                            ... and {importErrors.duplicates.length - 10} more duplicates
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+
                 
                 <div className="import-help">
                   <h4>How to fix these errors:</h4>
                   <ul>
                     <li><strong>Name:</strong> Must be at least 2 characters long</li>
-                    <li><strong>Email:</strong> Must be a valid email format (e.g., user@example.com)</li>
+
                     <li><strong>Status:</strong> Must be one of: New, Qualified, Negotiation, Closed, Lost</li>
-                    <li><strong>Duplicates:</strong> Remove or update existing leads with the same email</li>
+
                   </ul>
                 </div>
               </div>
@@ -1092,15 +1072,7 @@ const Leads = () => {
                       required
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Email *</label>
-                    <input
-                      type="email"
-                      value={editingLead.email}
-                      onChange={(e) => setEditingLead({...editingLead, email: e.target.value})}
-                      required
-                    />
-                  </div>
+
                 </div>
                 
                 <div className="form-row">
@@ -1112,14 +1084,7 @@ const Leads = () => {
                       onChange={(e) => setEditingLead({...editingLead, phone: e.target.value})}
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Company</label>
-                    <input
-                      type="text"
-                      value={editingLead.company}
-                      onChange={(e) => setEditingLead({...editingLead, company: e.target.value})}
-                    />
-                  </div>
+
                 </div>
                 
                 <div className="form-row">
@@ -1204,7 +1169,7 @@ const Leads = () => {
                     <option value="">Choose a user...</option>
                     {users.map((user) => (
                       <option key={user._id} value={user._id}>
-                        {user.name} ({user.email})
+                        {user.name}
                       </option>
                     ))}
                   </select>

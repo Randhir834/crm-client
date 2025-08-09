@@ -391,10 +391,10 @@ const Chat = () => {
                   >
                     <div className="chat-item-content">
                       <div className="chat-avatar">
-                        <span>{(chat.participantName || chat.participantEmail || 'U').charAt(0).toUpperCase()}</span>
+                        <span>{(chat.participantName || 'U').charAt(0).toUpperCase()}</span>
                       </div>
                       <div className="chat-info">
-                        <div className="chat-name">{chat.participantName || chat.participantEmail || 'Unknown User'}</div>
+                        <div className="chat-name">{chat.participantName || 'Unknown User'}</div>
                         <div className="chat-preview">
                           {chat.messages && chat.messages.length > 0 && chat.messages[chat.messages.length - 1]?.content
                             ? (chat.messages[chat.messages.length - 1].content.length > 50 
@@ -432,10 +432,8 @@ const Chat = () => {
                     </div>
                     <div className="participant-info">
                       <h3>{selectedChat.participantName}</h3>
-                      <p>{selectedChat.participantEmail}</p>
-                      {selectedChat.participantId?.company && (
-                        <span className="company">{selectedChat.participantId.company}</span>
-                      )}
+
+                      
                     </div>
                   </div>
                   <div className="chat-header-actions">
