@@ -806,20 +806,22 @@ const Leads = () => {
               </p>
             </div>
             <div className="section-actions">
-              <button 
-                className={`import-button ${uploading ? 'uploading' : ''}`}
-                onClick={handleImport}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <div className="mini-spinner"></div>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                  </svg>
-                )}
-                {uploading ? 'Uploading...' : 'Import'}
-              </button>
+              {isAdmin && (
+                <button 
+                  className={`import-button ${uploading ? 'uploading' : ''}`}
+                  onClick={handleImport}
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <div className="mini-spinner"></div>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                  )}
+                  {uploading ? 'Uploading...' : 'Import'}
+                </button>
+              )}
               {isAdmin && (
                 <button className="export-button" onClick={handleExport}>
                   <svg viewBox="0 0 24 24" fill="currentColor">
