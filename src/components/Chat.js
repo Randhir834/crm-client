@@ -5,6 +5,7 @@ import { getApiUrl } from '../config/api';
 import './Dashboard.css';
 
 const Chat = () => {
+  const { isAdmin } = useAuth();
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -446,20 +447,22 @@ const Chat = () => {
                       </div>
                     )}
 
-                    <button
-                      className="delete-chat-btn"
-                      onClick={() => showDeleteConfirmation(selectedChat)}
-                      disabled={deleting}
-                      title="Delete this chat"
-                    >
-                      {deleting ? (
-                        <div className="mini-spinner"></div>
-                      ) : (
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                        </svg>
-                      )}
-                    </button>
+                    {isAdmin && (
+                      <button
+                        className="delete-chat-btn"
+                        onClick={() => showDeleteConfirmation(selectedChat)}
+                        disabled={deleting}
+                        title="Delete this chat"
+                      >
+                        {deleting ? (
+                          <div className="mini-spinner"></div>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                          </svg>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 

@@ -5,6 +5,7 @@ import { getApiUrl } from '../config/api';
 import './Dashboard.css';
 
 const CallSchedule = () => {
+  const { isAdmin } = useAuth();
   const [leads, setLeads] = useState([]);
   const [callSchedules, setCallSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -678,19 +679,23 @@ const CallSchedule = () => {
                       </button>
                     </td>
                     <td>
-                      <button 
-                        className={`action-btn delete ${deletingSchedules.has(schedule._id) ? 'deleting' : ''}`}
-                        onClick={() => handleDeleteSchedule(schedule._id)}
-                        disabled={deletingSchedules.has(schedule._id)}
-                      >
-                        {deletingSchedules.has(schedule._id) ? (
-                          <div className="mini-spinner"></div>
-                        ) : (
-                          <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                          </svg>
-                        )}
-                      </button>
+                      {isAdmin ? (
+                        <button 
+                          className={`action-btn delete ${deletingSchedules.has(schedule._id) ? 'deleting' : ''}`}
+                          onClick={() => handleDeleteSchedule(schedule._id)}
+                          disabled={deletingSchedules.has(schedule._id)}
+                        >
+                          {deletingSchedules.has(schedule._id) ? (
+                            <div className="mini-spinner"></div>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                          )}
+                        </button>
+                      ) : (
+                        <span className="no-action">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}
