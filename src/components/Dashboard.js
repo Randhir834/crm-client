@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 import './Dashboard.css';
@@ -9,12 +9,9 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({
     totalLeads: 0,
-    activeLeads: 0,
-    totalCalls: 0,
-    conversionRate: 0,
-    totalCustomers: 0,
-    activeCustomers: 0
+    activeLeads: 0
   });
+
   const [recentActivity, setRecentActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionInfo, setSessionInfo] = useState({
@@ -39,7 +36,6 @@ const Dashboard = () => {
     
     // Listen for lead deletion events from other components
     const handleLeadDeleted = (event) => {
-      const { leadId } = event.detail;
       // Update stats by reducing total and active leads count
       setStats(prevStats => ({
         ...prevStats,
@@ -49,18 +45,17 @@ const Dashboard = () => {
       
       // Remove any activities related to the deleted lead
       setRecentActivity(prevActivities => 
-        prevActivities.filter(activity => !activity.id.includes(leadId))
+        prevActivities.filter(activity => !activity.id.includes(event.detail.leadId))
       );
     };
     
     // Listen for leads imported events from other components
     const handleLeadsImported = (event) => {
-      const { count } = event.detail;
       // Update stats by increasing total and active leads count
       setStats(prevStats => ({
         ...prevStats,
-        totalLeads: prevStats.totalLeads + count,
-        activeLeads: prevStats.activeLeads + count
+        totalLeads: prevStats.totalLeads + event.detail.count,
+        activeLeads: prevStats.activeLeads + event.detail.count
       }));
       
       // Refresh dashboard data to get updated activity feed
@@ -69,24 +64,6 @@ const Dashboard = () => {
     
     // Listen for lead status update events from other components
     const handleLeadStatusUpdated = (event) => {
-      const { leadId, newStatus } = event.detail;
-      
-      // Refresh dashboard data to get updated statistics and activity feed
-      fetchDashboardData();
-    };
-
-    // Listen for customer events from other components
-    const handleCustomerAdded = (event) => {
-      // Refresh dashboard data to get updated statistics and activity feed
-      fetchDashboardData();
-    };
-
-    const handleCustomerDeleted = (event) => {
-      // Refresh dashboard data to get updated statistics and activity feed
-      fetchDashboardData();
-    };
-
-    const handleCustomerStatusChanged = (event) => {
       // Refresh dashboard data to get updated statistics and activity feed
       fetchDashboardData();
     };
@@ -94,17 +71,11 @@ const Dashboard = () => {
     window.addEventListener('leadDeleted', handleLeadDeleted);
     window.addEventListener('leadsImported', handleLeadsImported);
     window.addEventListener('leadStatusUpdated', handleLeadStatusUpdated);
-    window.addEventListener('customerAdded', handleCustomerAdded);
-    window.addEventListener('customerDeleted', handleCustomerDeleted);
-    window.addEventListener('customerStatusChanged', handleCustomerStatusChanged);
     
     return () => {
       window.removeEventListener('leadDeleted', handleLeadDeleted);
       window.removeEventListener('leadsImported', handleLeadsImported);
       window.removeEventListener('leadStatusUpdated', handleLeadStatusUpdated);
-      window.removeEventListener('customerAdded', handleCustomerAdded);
-      window.removeEventListener('customerDeleted', handleCustomerDeleted);
-      window.removeEventListener('customerStatusChanged', handleCustomerStatusChanged);
     };
   }, []);
 
@@ -122,61 +93,27 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+
+
       // Fetch all leads for activity feed
       const leadsResponse = await axios.get(getApiUrl('api/leads?limit=1000'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Fetch call schedules statistics
-      const callsStatsResponse = await axios.get(getApiUrl('api/call-schedules/stats'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      // Fetch all call schedules for activity feed
-      const callsResponse = await axios.get(getApiUrl('api/call-schedules'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      // Fetch customers statistics
-      const customersStatsResponse = await axios.get(getApiUrl('api/customers/stats'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      // Fetch all customers for activity feed
-      const customersResponse = await axios.get(getApiUrl('api/customers'), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (leadsStatsResponse.data && leadsResponse.data && callsStatsResponse.data && callsResponse.data && customersStatsResponse.data && customersResponse.data) {
+      if (leadsStatsResponse.data && leadsResponse.data) {
         const leadsStats = leadsStatsResponse.data.stats || {};
         const leads = leadsResponse.data.leads || [];
-        const callsStats = callsStatsResponse.data.stats || {};
-        const calls = callsResponse.data.callSchedules || [];
-        const customersStats = customersStatsResponse.data.stats || {};
-        const customers = customersResponse.data.customers || [];
-        
-
         
         // Calculate statistics using stats data
         const totalLeads = leadsStats.total || 0;
         const activeLeads = (leadsStats.new || 0) + (leadsStats.qualified || 0) + (leadsStats.negotiation || 0);
-        
-        const totalCalls = callsStats.total || calls.length;
-        const completedCalls = callsStats.completed || calls.filter(call => call.status === 'Completed').length;
-        const conversionRate = totalCalls > 0 ? Math.round((completedCalls / totalCalls) * 100) : 0;
-        const totalCustomers = customersStats.total || customers.length;
-        const activeCustomers = customersStats.active || customers.filter(customer => customer.status === 'active').length;
-        
-
 
         setStats({
           totalLeads,
-          activeLeads,
-          totalCalls,
-          conversionRate,
-          totalCustomers,
-          activeCustomers
+          activeLeads
         });
+
+              
 
         // Generate comprehensive recent activity
         const activities = [];
@@ -189,7 +126,7 @@ const Dashboard = () => {
             type: 'lead_added',
             message: `New lead "${lead.name}" added`,
             time: new Date(lead.createdAt || lead.created_at || Date.now()),
-                          details: `Lead added`,
+            details: `Lead added`,
             status: lead.status
           });
 
@@ -211,85 +148,10 @@ const Dashboard = () => {
           }
         });
 
-        // Add call activities
-        calls.forEach(call => {
-          // Call scheduled
-          activities.push({
-            id: `call_${call._id}`,
-            type: 'call_scheduled',
-            message: `Call scheduled with ${call.leadId?.name || 'Lead'}`,
-            time: new Date(call.createdAt || call.created_at || Date.now()),
-            details: `${formatDate(call.scheduledDate)} at ${call.scheduledTime}`,
-            status: call.status
-          });
-
-          // Call status changes
-          if (call.status !== 'Scheduled') {
-            activities.push({
-              id: `call_status_${call._id}`,
-              type: 'call_completed',
-              message: `Call with ${call.leadId?.name || 'Lead'} ${call.status.toLowerCase()}`,
-              time: new Date(call.updatedAt || call.updated_at || call.createdAt || call.created_at || Date.now()),
-              details: `Status: ${call.status}`,
-              status: call.status
-            });
-          }
-        });
-
-        // Add customer activities
-        customers.forEach(customer => {
-          // New customer added
-          activities.push({
-            id: `customer_${customer._id}`,
-            type: 'customer_added',
-            message: `New customer "${customer.name}" added`,
-            time: new Date(customer.createdAt || customer.created_at || Date.now()),
-                          details: `Customer added`,
-            status: customer.status
-          });
-
-          // Customer conversion from lead
-          if (customer.convertedFrom && customer.convertedFrom.leadId) {
-            activities.push({
-              id: `conversion_${customer._id}`,
-              type: 'lead_updated',
-              message: `Lead converted to customer: "${customer.name}"`,
-              time: new Date(customer.convertedFrom.convertedAt || customer.createdAt || customer.created_at || Date.now()),
-              details: `Converted from qualified lead • ${customer.email}`,
-              status: 'Converted'
-            });
-          }
-        });
-
-        // Add upcoming call reminders
-        const now = new Date();
-        calls.filter(call => call.status === 'Scheduled').forEach(call => {
-          const callDate = new Date(call.scheduledDate);
-          const [hours, minutes] = call.scheduledTime.split(':');
-          callDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-          
-          const timeDiff = callDate.getTime() - now.getTime();
-          const hoursDiff = timeDiff / (1000 * 60 * 60);
-          
-          // Show upcoming calls within next 24 hours
-          if (timeDiff > 0 && hoursDiff <= 24) {
-            activities.push({
-              id: `upcoming_${call._id}`,
-              type: 'call_upcoming',
-              message: `Upcoming call with ${call.leadId?.name || 'Lead'}`,
-              time: callDate,
-              details: `In ${Math.ceil(hoursDiff)} hours • ${call.scheduledTime}`,
-              status: 'upcoming'
-            });
-          }
-        });
-
         // Sort by time and take most recent 8 activities
         const allActivity = activities
           .sort((a, b) => new Date(b.time) - new Date(a.time))
           .slice(0, 8);
-
-
 
         // If no activities found, add some fallback activities
         if (allActivity.length === 0) {
@@ -299,7 +161,7 @@ const Dashboard = () => {
               type: 'system_update',
               message: 'Welcome to Innovatiq Media CRM!',
               time: new Date(),
-              details: 'Start by adding leads and scheduling calls',
+              details: 'Start by adding leads to your pipeline',
               status: 'active'
             }
           ];
@@ -311,28 +173,6 @@ const Dashboard = () => {
               message: `You have ${totalLeads} leads in your Innovatiq Media pipeline`,
               time: new Date(Date.now() - 3600000), // 1 hour ago
               details: `${activeLeads} active leads • ${totalLeads - activeLeads} completed`,
-              status: 'active'
-            });
-          }
-          
-          if (totalCalls > 0) {
-            fallbackActivities.push({
-              id: 'calls_1',
-              type: 'call_scheduled',
-              message: `You have ${totalCalls} scheduled calls`,
-              time: new Date(Date.now() - 7200000), // 2 hours ago
-              details: `${completedCalls} completed • ${totalCalls - completedCalls} pending`,
-              status: 'active'
-            });
-          }
-          
-          if (totalCustomers > 0) {
-            fallbackActivities.push({
-              id: 'customers_1',
-              type: 'customer_added',
-              message: `You have ${totalCustomers} customers`,
-              time: new Date(Date.now() - 10800000), // 3 hours ago
-              details: `${activeCustomers} active • ${totalCustomers - activeCustomers} inactive`,
               status: 'active'
             });
           }
@@ -354,11 +194,7 @@ const Dashboard = () => {
       // Set fallback data
       setStats({
         totalLeads: 0,
-        activeLeads: 0,
-        totalCalls: 0,
-        conversionRate: 0,
-        totalCustomers: 0,
-        activeCustomers: 0
+        activeLeads: 0
       });
       setRecentActivity([]);
     } finally {
@@ -368,21 +204,6 @@ const Dashboard = () => {
 
   // Set up periodic refresh of session info and dashboard data
   useEffect(() => {
-    // Listen for call schedule events
-    const handleCallScheduleCreated = (event) => {
-  
-      fetchDashboardData();
-    };
-    
-    const handleCallScheduleDeleted = (event) => {
-  
-      fetchDashboardData();
-    };
-    
-    // Add event listeners
-    window.addEventListener('callScheduleCreated', handleCallScheduleCreated);
-    window.addEventListener('callScheduleDeleted', handleCallScheduleDeleted);
-    
     const sessionInterval = setInterval(() => {
       fetchSessionUpdates();
     }, 10000); // Refresh every 10 seconds for real-time updates
@@ -394,8 +215,6 @@ const Dashboard = () => {
     return () => {
       clearInterval(sessionInterval);
       clearInterval(dashboardInterval);
-      window.removeEventListener('callScheduleCreated', handleCallScheduleCreated);
-      window.removeEventListener('callScheduleDeleted', handleCallScheduleDeleted);
     };
   }, []);
 
@@ -601,22 +420,7 @@ const Dashboard = () => {
   //   });
   // };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   const getActivityIcon = (type) => {
     switch (type) {
@@ -630,30 +434,6 @@ const Dashboard = () => {
         return (
           <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
             <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-          </svg>
-        );
-      case 'call_scheduled':
-        return (
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-          </svg>
-        );
-      case 'call_completed':
-        return (
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        );
-      case 'call_upcoming':
-        return (
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-          </svg>
-        );
-      case 'customer_added':
-        return (
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
           </svg>
         );
       case 'report_generated':
@@ -788,46 +568,9 @@ const Dashboard = () => {
               <span className="stat-change positive">Leads in progress</span>
             </div>
           </div>
-
-          <div className="stat-card">
-            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
-              <svg viewBox="0 0 24 24" fill="white">
-                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>Total Calls</h3>
-              <p className="stat-number">{stats.totalCalls}</p>
-              <span className="stat-change positive">Scheduled calls</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}>
-              <svg viewBox="0 0 24 24" fill="white">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>Conversion Rate</h3>
-              <p className="stat-number">{stats.conversionRate}%</p>
-              <span className="stat-change positive">Call completion rate</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
-              <svg viewBox="0 0 24 24" fill="white">
-                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>Total Customers</h3>
-              <p className="stat-number">{stats.totalCustomers}</p>
-              <span className="stat-change positive">{stats.activeCustomers} active customers</span>
-            </div>
-          </div>
         </div>
+
+
 
         {/* Main Content Grid */}
         <div className="dashboard-grid">

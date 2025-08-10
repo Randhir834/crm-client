@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import Layout from './Layout';
 import { getApiUrl } from '../config/api';
-import { toast } from 'react-toastify';
 import './Dashboard.css';
 
 const AdminDashboard = () => {
@@ -11,15 +9,13 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
-    totalLeads: 0,
-    totalCustomers: 0,
-    totalChats: 0
+    totalLeads: 0
   });
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [updatingUser, setUpdatingUser] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+
 
   useEffect(() => {
     fetchAdminData();
@@ -53,13 +49,15 @@ const AdminDashboard = () => {
         setStats(statsData.stats || {
           totalUsers: 0,
           activeUsers: 0,
-          totalLeads: 0,
-          totalCustomers: 0,
-          totalChats: 0
+          totalLeads: 0
         });
       } else {
         console.error('Failed to fetch stats:', statsResponse.status);
       }
+
+
+
+
 
       // Fetch all users with session data
       const usersResponse = await fetch(getApiUrl('api/sessions/all'), {
@@ -80,44 +78,10 @@ const AdminDashboard = () => {
       setError('Failed to load admin data. Please try again.');
     } finally {
       setLoading(false);
-      setLastUpdated(new Date());
     }
   };
 
-  const updateUserRole = async (userId, newRole) => {
-    try {
-      setUpdatingUser(userId);
-      const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl(`api/auth/users/${userId}/role`), {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ role: newRole })
-      });
 
-      if (response.ok) {
-        // Update local state immediately for better UX
-        setUsers(prevUsers => 
-          prevUsers.map(user => 
-            user._id === userId 
-              ? { ...user, role: newRole }
-              : user
-          )
-        );
-
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to update user role');
-      }
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      alert('Error updating user role. Please try again.');
-    } finally {
-      setUpdatingUser(null);
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Never';
@@ -271,30 +235,6 @@ const AdminDashboard = () => {
             <div className="stat-content">
               <h3>Total Leads</h3>
               <div className="stat-number">{stats.totalLeads}</div>
-            </div>
-          </div>
-
-          <div className="stat-card total-customers">
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>Total Customers</h3>
-              <div className="stat-number">{stats.totalCustomers}</div>
-            </div>
-          </div>
-
-          <div className="stat-card total-chats">
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>Active Chats</h3>
-              <div className="stat-number">{stats.totalChats}</div>
             </div>
           </div>
         </div>

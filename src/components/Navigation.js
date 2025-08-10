@@ -55,26 +55,6 @@ const Navigation = () => {
           >
             Leads
           </button>
-          <button 
-            className={`nav-item ${isActive('/call-schedule') ? 'active' : ''}`}
-            onClick={() => navigate('/call-schedule')}
-          >
-            Call Schedule
-          </button>
-          <button 
-            className={`nav-item ${isActive('/customers') ? 'active' : ''}`}
-            onClick={() => navigate('/customers')}
-          >
-            Customers
-          </button>
-          <button 
-            className={`nav-item ${isActive('/chat') ? 'active' : ''}`}
-            onClick={() => navigate('/chat')}
-          >
-            Chat
-          </button>
-
-          
         </div>
       </div>
 

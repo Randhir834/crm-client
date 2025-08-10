@@ -6,9 +6,6 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 import Leads from './components/Leads';
-import CallSchedule from './components/CallSchedule';
-import Customers from './components/Customers';
-import Chat from './components/Chat';
 import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
@@ -45,30 +42,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Leads />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/call-schedule" 
-              element={
-                <ProtectedRoute>
-                  <CallSchedule />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customers" 
-              element={
-                <ProtectedRoute>
-                  <Customers />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/chat" 
-              element={
-                <ProtectedRoute>
-                  <Chat />
                 </ProtectedRoute>
               } 
             />
