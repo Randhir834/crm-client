@@ -179,47 +179,61 @@ const Call = () => {
   // Countdown timer effect
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = new Date();
-      const newCountdowns = {};
-      
-      Object.entries(scheduledCalls).forEach(([leadId, calls]) => {
-        const autoScheduledCall = calls.find(call => 
-          call.notes === 'Auto-scheduled after call not connected' && 
-          call.status === 'pending'
-        );
+      try {
+        const now = new Date();
+        const newCountdowns = {};
         
-        if (autoScheduledCall) {
-          const timeLeft = new Date(autoScheduledCall.scheduledTime) - now;
-          if (timeLeft > 0) {
-            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            newCountdowns[leadId] = `${hours}h ${minutes}m`;
+        Object.entries(scheduledCalls).forEach(([leadId, calls]) => {
+          try {
+            const autoScheduledCall = calls.find(call => 
+              call.notes === 'Auto-scheduled after call not connected' && 
+              call.status === 'pending'
+            );
             
-            // Show notification when call is due in 15 minutes or less
-            if (timeLeft <= 15 * 60 * 1000 && timeLeft > 0) {
-              const lead = leads.find(l => l._id === leadId);
-              if (lead && !lead.notificationShown) {
-                // Show browser notification if supported
-                if ('Notification' in window && Notification.permission === 'granted') {
-                  new Notification('Call Reminder', {
-                    body: `Time to call ${lead.name || 'lead'} - scheduled call is due soon!`,
-                    icon: '/favicon.ico'
-                  });
-                }
+            if (autoScheduledCall) {
+              const timeLeft = new Date(autoScheduledCall.scheduledTime) - now;
+              if (timeLeft > 0) {
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                newCountdowns[leadId] = `${hours}h ${minutes}m`;
                 
-                // Mark notification as shown to avoid spam
-                setLeads(prev => prev.map(l => 
-                  l._id === leadId ? { ...l, notificationShown: true } : l
-                ));
+                // Show notification when call is due in 15 minutes or less
+                if (timeLeft <= 15 * 60 * 1000 && timeLeft > 0) {
+                  const lead = leads.find(l => l._id === leadId);
+                  if (lead && !lead.notificationShown) {
+                    // Show browser notification if supported
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                      try {
+                        new Notification('Call Reminder', {
+                          body: `Time to call ${lead.name || 'lead'} - scheduled call is due soon!`,
+                          icon: '/favicon.ico'
+                        });
+                      } catch (notificationError) {
+                        console.warn('Failed to show notification:', notificationError);
+                      }
+                    }
+                    
+                    // Mark notification as shown to avoid spam
+                    setLeads(prev => prev.map(l => 
+                      l._id === leadId ? { ...l, notificationShown: true } : l
+                    ));
+                  }
+                }
+              } else {
+                newCountdowns[leadId] = 'Overdue';
               }
             }
-          } else {
-            newCountdowns[leadId] = 'Overdue';
+          } catch (leadError) {
+            // Silent error handling for individual lead processing
+            console.warn('Error processing lead countdown:', leadId, leadError);
           }
-        }
-      });
-      
-      setCountdowns(newCountdowns);
+        });
+        
+        setCountdowns(newCountdowns);
+      } catch (error) {
+        // Silent error handling for countdown timer
+        console.warn('Countdown timer error:', error);
+      }
     }, 1000); // Update every second
 
     return () => clearInterval(interval);
@@ -287,7 +301,7 @@ const Call = () => {
         return;
       }
       
-      // Update call status locally
+      // Update call status locally immediately for better UX
       setCallStatus(prev => ({ ...prev, [leadId]: 'not_connected' }));
       
       // Call the backend to automatically schedule a call for 2 hours later
@@ -308,19 +322,26 @@ const Call = () => {
         const timeString = scheduledTime.toLocaleString();
         alert(`✅ Call not connected!\n\n📞 Follow-up call automatically scheduled for:\n${timeString}\n\nYou'll be notified 15 minutes before the scheduled time.`);
         
-        // Refresh scheduled calls for this lead
-        await fetchScheduledCallsForLead(leadId);
+        // Refresh scheduled calls for this lead silently
+        try {
+          await fetchScheduledCallsForLead(leadId, true);
+        } catch (refreshError) {
+          // Silent error handling for refresh - don't show to user
+          console.warn('Silent refresh failed for lead:', leadId, refreshError);
+        }
         
         // Force re-render to update priority sorting
         setForceUpdate(prev => prev + 1);
         
       } else {
         console.error('Failed to handle call not connected:', response.status);
-        alert('Failed to schedule follow-up call. Please try again.');
+        // Show user-friendly error message
+        alert('Call marked as not connected, but there was an issue scheduling the follow-up call. You can manually schedule it later.');
       }
     } catch (error) {
       console.error('Error handling call not connected:', error);
-      alert('Error scheduling follow-up call. Please try again.');
+      // Show user-friendly error message
+      alert('Call marked as not connected, but there was an issue scheduling the follow-up call. You can manually schedule it later.');
     }
   };
 
@@ -457,7 +478,7 @@ const Call = () => {
   };
 
   // Fetch scheduled calls for a lead
-  const fetchScheduledCallsForLead = async (leadId, silent = false) => {
+  const fetchScheduledCallsForLead = async (leadId, silent = false, retryCount = 0) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(getApiUrl(`api/scheduled-calls/lead/${leadId}`), {
@@ -473,14 +494,36 @@ const Call = () => {
           ...prev,
           [leadId]: data.scheduledCalls || []
         }));
+        
+        // Trigger priority update after loading scheduled calls
+        // This ensures proper sorting after page refresh
+        if (!silent) {
+          setTimeout(() => {
+            setForceUpdate(prev => prev + 1);
+          }, 50);
+        }
       } else {
         if (!silent) {
           console.error(`Failed to fetch scheduled calls for lead ${leadId}:`, response.status);
+        }
+        
+        // Retry logic for silent calls (auto-refresh)
+        if (silent && retryCount < 2) {
+          setTimeout(() => {
+            fetchScheduledCallsForLead(leadId, true, retryCount + 1);
+          }, 5000); // Wait 5 seconds before retry
         }
       }
     } catch (error) {
       if (!silent) {
         console.error(`Error fetching scheduled calls for lead ${leadId}:`, error);
+      }
+      
+      // Retry logic for silent calls (auto-refresh)
+      if (silent && retryCount < 2) {
+        setTimeout(() => {
+          fetchScheduledCallsForLead(leadId, true, retryCount + 1);
+        }, 5000); // Wait 5 seconds before retry
       }
     }
   };
@@ -520,7 +563,7 @@ const Call = () => {
 
 
   // Fetch leads from API
-  const fetchLeads = useCallback(async (silent = false) => {
+  const fetchLeads = useCallback(async (silent = false, retryCount = 0) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(getApiUrl('api/leads?limit=10000'), {
@@ -543,14 +586,37 @@ const Call = () => {
         
         // Fetch scheduled calls for all leads (always needed for priority sorting)
         await Promise.all(leadsData.map(lead => fetchScheduledCallsForLead(lead._id, silent)));
+        
+        // Force priority recalculation after loading all data
+        // This ensures proper sorting after page refresh
+        if (!silent) {
+          setTimeout(() => {
+            setForceUpdate(prev => prev + 1);
+            console.log('Forcing priority recalculation after loading all data');
+          }, 200);
+        }
       } else {
         if (!silent) {
           console.error('Failed to fetch leads:', response.status, response.statusText);
+        }
+        
+        // Retry logic for silent calls (auto-refresh)
+        if (silent && retryCount < 2) {
+          setTimeout(() => {
+            fetchLeads(true, retryCount + 1);
+          }, 10000); // Wait 10 seconds before retry
         }
       }
     } catch (error) {
       if (!silent) {
         console.error('Error fetching leads:', error);
+      }
+      
+      // Retry logic for silent calls (auto-refresh)
+      if (silent && retryCount < 2) {
+        setTimeout(() => {
+          fetchLeads(true, retryCount + 1);
+        }, 10000); // Wait 10 seconds before retry
       }
     } finally {
       // Only set initialLoad to false on the first load, not during silent refreshes
@@ -616,6 +682,132 @@ const Call = () => {
     }
   }, [fetchLeads]);
 
+  // Immediate priority check when component mounts
+  useEffect(() => {
+    if (leads.length > 0 && Object.keys(scheduledCalls).length > 0) {
+      // Check if any auto-scheduled calls are due immediately
+      const now = new Date();
+      let needsImmediateUpdate = false;
+      
+      Object.entries(scheduledCalls).forEach(([leadId, calls]) => {
+        const autoScheduledCall = calls.find(call => 
+          (call.notes === 'Auto-scheduled after call not connected' || 
+           call.notes === 'Auto-scheduled after call not connected (updated)') && 
+          call.status === 'pending'
+        );
+        
+        if (autoScheduledCall) {
+          const callTime = new Date(autoScheduledCall.scheduledTime);
+          const timeDiff = callTime - now;
+          const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+          
+          // If call is due within 30 minutes or overdue, it needs immediate priority update
+          if (minutesDiff <= 30) {
+            needsImmediateUpdate = true;
+          }
+        }
+      });
+      
+      // Force immediate re-render if priority needs updating
+      if (needsImmediateUpdate) {
+        setForceUpdate(prev => prev + 1);
+      }
+      
+      // Always force a re-render after initial load to ensure proper sorting
+      // This fixes the issue where auto-scheduled calls don't get proper priority after refresh
+      setTimeout(() => {
+        setForceUpdate(prev => prev + 1);
+      }, 100); // Small delay to ensure all data is loaded
+    }
+  }, [leads, scheduledCalls]);
+
+  // Additional priority recalculation after scheduled calls are fully loaded
+  useEffect(() => {
+    if (leads.length > 0 && Object.keys(scheduledCalls).length > 0) {
+      // Wait a bit more to ensure all data is properly loaded
+      const timer = setTimeout(() => {
+        // Force a re-render to ensure proper priority sorting
+        setForceUpdate(prev => prev + 1);
+      }, 500); // 500ms delay to ensure complete data loading
+
+      return () => clearTimeout(timer);
+    }
+  }, [leads, scheduledCalls]);
+
+  // Comprehensive priority initialization after all data is loaded
+  useEffect(() => {
+    if (leads.length > 0 && Object.keys(scheduledCalls).length > 0 && !initialLoad) {
+      // This runs after the initial load is complete
+      const timer = setTimeout(() => {
+        // Check if any auto-scheduled calls need priority updates
+        const now = new Date();
+        let needsPriorityUpdate = false;
+        
+        Object.entries(scheduledCalls).forEach(([leadId, calls]) => {
+          const autoScheduledCall = calls.find(call => 
+            (call.notes === 'Auto-scheduled after call not connected' || 
+             call.notes === 'Auto-scheduled after call not connected (updated)') && 
+            call.status === 'pending'
+          );
+          
+          if (autoScheduledCall) {
+            const callTime = new Date(autoScheduledCall.scheduledTime);
+            const timeDiff = callTime - now;
+            const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+            
+            // If call is due within 30 minutes or overdue, it needs priority update
+            if (minutesDiff <= 30) {
+              needsPriorityUpdate = true;
+            }
+          }
+        });
+        
+        // Force re-render to ensure proper priority sorting
+        if (needsPriorityUpdate) {
+          setForceUpdate(prev => prev + 1);
+        }
+        
+        // Always force one more re-render to ensure proper sorting after refresh
+        setTimeout(() => {
+          setForceUpdate(prev => prev + 1);
+        }, 200);
+      }, 1000); // 1 second delay to ensure all data is fully processed
+
+      return () => clearTimeout(timer);
+    }
+  }, [leads, scheduledCalls, initialLoad]);
+
+  // Immediate priority check on mount - more aggressive approach
+  useEffect(() => {
+    if (leads.length > 0 && Object.keys(scheduledCalls).length > 0) {
+      // Force immediate priority calculation
+      setForceUpdate(prev => prev + 1);
+      
+      // Additional checks with delays to ensure proper sorting
+      const timers = [
+        setTimeout(() => setForceUpdate(prev => prev + 1), 100),
+        setTimeout(() => setForceUpdate(prev => prev + 1), 500),
+        setTimeout(() => setForceUpdate(prev => prev + 1), 1000),
+        setTimeout(() => setForceUpdate(prev => prev + 1), 2000)
+      ];
+      
+      return () => timers.forEach(timer => clearTimeout(timer));
+    }
+  }, [leads, scheduledCalls]);
+
+  // Manual priority recalculation function
+  const recalculatePriorities = useCallback(() => {
+    console.log('Manually recalculating priorities...');
+    setForceUpdate(prev => prev + 1);
+  }, []);
+
+  // Expose the function globally for debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.recalculatePriorities = recalculatePriorities;
+    }
+  }, [recalculatePriorities]);
+
   // Check scheduled call times every minute to update priority
   useEffect(() => {
     const interval = setInterval(() => {
@@ -628,9 +820,14 @@ const Call = () => {
 
   // Silent auto-refresh for leads data
   useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      // Silently refresh leads data in the background
-      fetchLeads(true); // true = silent mode
+    const refreshInterval = setInterval(async () => {
+      try {
+        // Silently refresh leads data in the background
+        await fetchLeads(true); // true = silent mode
+      } catch (error) {
+        // Silent error handling for background refresh
+        console.warn('Silent leads refresh failed:', error);
+      }
     }, 120000); // Refresh every 2 minutes to avoid overwhelming the server
 
     return () => clearInterval(refreshInterval);
@@ -649,25 +846,30 @@ const Call = () => {
   // Very frequent time check to catch scheduled times immediately
   useEffect(() => {
     const timeCheckInterval = setInterval(() => {
-      // Check if any scheduled calls have reached their time
-      const now = new Date();
-      let needsUpdate = false;
-      
-      Object.entries(scheduledCalls).forEach(([leadId, calls]) => {
-        const pendingCalls = calls.filter(call => call.status === 'pending');
-        pendingCalls.forEach(call => {
-          const callTime = new Date(call.scheduledTime);
-          if (callTime <= now && !call.isOverdue) {
-            // Mark this call as overdue for immediate visual update
-            call.isOverdue = true;
-            needsUpdate = true;
-          }
+      try {
+        // Check if any scheduled calls have reached their time
+        const now = new Date();
+        let needsUpdate = false;
+        
+        Object.entries(scheduledCalls).forEach(([leadId, calls]) => {
+          const pendingCalls = calls.filter(call => call.status === 'pending');
+          pendingCalls.forEach(call => {
+            const callTime = new Date(call.scheduledTime);
+            if (callTime <= now && !call.isOverdue) {
+              // Mark this call as overdue for immediate visual update
+              call.isOverdue = true;
+              needsUpdate = true;
+            }
+          });
         });
-      });
-      
-      // Force re-render if any calls became overdue
-      if (needsUpdate) {
-        setForceUpdate(prev => prev + 1);
+        
+        // Force re-render if any calls became overdue
+        if (needsUpdate) {
+          setForceUpdate(prev => prev + 1);
+        }
+      } catch (error) {
+        // Silent error handling for time check
+        console.warn('Time check failed:', error);
       }
     }, 10000); // Check every 10 seconds
 
@@ -686,12 +888,53 @@ const Call = () => {
           setForceUpdate(prev => prev + 1);
         } catch (error) {
           // Silent error handling for background refresh
+          console.warn('Silent scheduled calls refresh failed:', error);
         }
       }
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(scheduledCallsInterval);
   }, [leads, fetchScheduledCallsForLead]);
+
+  // Special effect for auto-scheduled call priority updates
+  useEffect(() => {
+    const autoSchedulePriorityInterval = setInterval(() => {
+      try {
+        const now = new Date();
+        let needsPriorityUpdate = false;
+        
+        // Check if any auto-scheduled calls have become due or overdue
+        Object.entries(scheduledCalls).forEach(([leadId, calls]) => {
+          const autoScheduledCall = calls.find(call => 
+            (call.notes === 'Auto-scheduled after call not connected' || 
+             call.notes === 'Auto-scheduled after call not connected (updated)') && 
+            call.status === 'pending'
+          );
+          
+          if (autoScheduledCall) {
+            const callTime = new Date(autoScheduledCall.scheduledTime);
+            const timeDiff = callTime - now;
+            const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+            
+            // If call is due within 30 minutes or overdue, it should be high priority
+            if (minutesDiff <= 30) {
+              needsPriorityUpdate = true;
+            }
+          }
+        });
+        
+        // Force re-render if priority needs updating
+        if (needsPriorityUpdate) {
+          setForceUpdate(prev => prev + 1);
+        }
+      } catch (error) {
+        // Silent error handling for priority updates
+        console.warn('Auto-schedule priority update failed:', error);
+      }
+    }, 10000); // Check every 10 seconds for priority updates
+
+    return () => clearInterval(autoSchedulePriorityInterval);
+  }, [scheduledCalls]);
 
   // Refresh data when page becomes visible (user returns from another tab)
   useEffect(() => {
@@ -702,6 +945,8 @@ const Call = () => {
           await Promise.all(leads.map(lead => fetchScheduledCallsForLead(lead._id, true)));
           setForceUpdate(prev => prev + 1);
         } catch (error) {
+          // Silent error handling for visibility change refresh
+          console.warn('Visibility change refresh failed:', error);
         }
       }
     };
@@ -748,7 +993,7 @@ const Call = () => {
       if (!aNextCall && bNextCall) return -1;
       if (aNextCall && !bNextCall) return 1;
       
-      // Priority 3: Future scheduled calls - NEW LOGIC
+      // Priority 3: Future scheduled calls - IMPROVED LOGIC
       const aTime = new Date(aNextCall.scheduledTime);
       const bTime = new Date(bNextCall.scheduledTime);
       
@@ -758,14 +1003,48 @@ const Call = () => {
       const bIsAutoScheduled = bNextCall.notes === 'Auto-scheduled after call not connected' || 
                                bNextCall.notes === 'Auto-scheduled after call not connected (updated)';
       
-      // If both are auto-scheduled, sort by time (earliest first)
+      // Calculate time differences for priority
+      const aTimeDiff = aTime - now;
+      const bTimeDiff = bTime - now;
+      const aMinutesDiff = Math.floor(aTimeDiff / (1000 * 60));
+      const bMinutesDiff = Math.floor(bTimeDiff / (1000 * 60));
+      
+      // Debug logging for auto-scheduled calls
+      if (aIsAutoScheduled || bIsAutoScheduled) {
+        console.log('Priority calculation:', {
+          leadA: a.name || a._id,
+          leadB: b.name || b._id,
+          aIsAutoScheduled,
+          bIsAutoScheduled,
+          aMinutesDiff,
+          bMinutesDiff,
+          aTime: aTime.toLocaleString(),
+          bTime: bTime.toLocaleString()
+        });
+      }
+      
+      // If both are auto-scheduled, sort by urgency (due soonest first)
       if (aIsAutoScheduled && bIsAutoScheduled) {
+        // If one is due within 30 minutes, it gets higher priority
+        if (aMinutesDiff <= 30 && bMinutesDiff > 30) return -1;
+        if (bMinutesDiff <= 30 && aMinutesDiff > 30) return 1;
+        // Otherwise sort by time (earliest first)
         return aTime - bTime;
       }
       
-      // If only one is auto-scheduled, the auto-scheduled one goes to the bottom
-      if (aIsAutoScheduled && !bIsAutoScheduled) return 1;
-      if (!aIsAutoScheduled && bIsAutoScheduled) return -1;
+      // If only one is auto-scheduled, check if it's due soon
+      if (aIsAutoScheduled && !bIsAutoScheduled) {
+        // Auto-scheduled call gets higher priority if due within 30 minutes
+        if (aMinutesDiff <= 30) return -1;
+        // Otherwise goes to bottom
+        return 1;
+      }
+      if (!aIsAutoScheduled && bIsAutoScheduled) {
+        // Auto-scheduled call gets higher priority if due within 30 minutes
+        if (bMinutesDiff <= 30) return 1;
+        // Otherwise goes to bottom
+        return -1;
+      }
       
       // If neither is auto-scheduled, sort by time (earliest first)
       return aTime - bTime;
