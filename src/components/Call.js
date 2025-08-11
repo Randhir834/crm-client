@@ -6,7 +6,20 @@ import './Dashboard.css';
 // Add custom styles for auto-scheduled indicator
 const autoScheduledStyles = `
   .auto-scheduled-indicator {
-    display: none !important;
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    margin: 10px 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(149, 165, 166, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    opacity: 0.8;
+    position: relative;
   }
   
   .auto-scheduled-indicator::before {
@@ -1145,10 +1158,10 @@ const Call = () => {
 
   // Handle creating a new important point
   const handleCreatePoint = async (leadId) => {
-    const combinedContent = tempPoints[`new_${leadId}`] || '';
+    const content = tempPoints[`new_${leadId}`] || '';
     
-    if (!combinedContent.trim()) {
-      alert('Please enter some content for the important points');
+    if (!content.trim()) {
+      alert('Please enter some content for the important point');
       return;
     }
 
@@ -1158,77 +1171,45 @@ const Call = () => {
 
     try {
       const token = localStorage.getItem('token');
-      
-      // Split content by newlines and filter out empty lines
-      const allPoints = combinedContent
-        .split('\n')
-        .map(point => point.trim())
-        .filter(point => point.length > 0);
-      
-      // Clear existing points from local state first
-      setImportantPoints(prev => ({
-        ...prev,
-        [leadId]: []
-      }));
-      
-      // Delete all existing points from database
-      const existingPoints = importantPoints[leadId] || [];
-      for (const point of existingPoints) {
-        try {
-          await fetch(getApiUrl(`api/important-points/${point._id}`), {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-        } catch (error) {
-          console.error('Error deleting existing point:', error);
-        }
-      }
-      
-      // Create new points with ONLY the current content from textarea
-      const newPoints = [];
-      for (const content of allPoints) {
-        try {
-          const response = await fetch(getApiUrl('api/important-points'), {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ leadId, content })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            newPoints.push(data.importantPoint);
-          } else {
-            console.error('Failed to create important point:', response.status);
-            alert(`Failed to create point: "${content}". Please try again.`);
-          }
-        } catch (error) {
-          console.error('Error creating important point:', error);
-          alert(`Error creating point: "${content}". Please try again.`);
-        }
-      }
-      
-      // Update local state with ONLY the new points
-      setImportantPoints(prev => ({
-        ...prev,
-        [leadId]: newPoints
-      }));
-
-      // Clear temp points
-      setTempPoints(prev => {
-        const newTemp = { ...prev };
-        delete newTemp[`new_${leadId}`];
-        return newTemp;
+      const response = await fetch(getApiUrl('api/important-points'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ leadId, content: content.trim() })
       });
 
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update local state
+        setImportantPoints(prev => ({
+          ...prev,
+          [leadId]: [data.importantPoint, ...(prev[leadId] || [])]
+        }));
+
+        // Exit editing mode
+        setEditingPoints(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(leadId);
+          return newSet;
+        });
+
+        // Clear temp points
+        setTempPoints(prev => {
+          const newTemp = { ...prev };
+          delete newTemp[`new_${leadId}`];
+          return newTemp;
+        });
+
+      } else {
+        console.error('Failed to create important point:', response.status);
+        alert('Failed to create important point. Please try again.');
+      }
     } catch (error) {
-      console.error('Error handling important points:', error);
-      alert('Error handling important points. Please try again.');
+      console.error('Error creating important point:', error);
+      alert('Error creating important point. Please try again.');
     } finally {
       setCreatingPoint(prev => {
         const newSet = new Set(prev);
@@ -1535,39 +1516,102 @@ const Call = () => {
                       </div>
                     ) : (
                       <div className="points-display">
-                        {/* Combined points input and display in single container */}
+                        {/* Display existing points */}
+                        {importantPoints[lead._id] && importantPoints[lead._id].length > 0 && (
+                          <div className="points-content">
+                            {importantPoints[lead._id].map((point, index) => (
+                              <div key={point._id} className="point-item">
+                                <div className="point-content">
+                                  {editingPoints.has(point._id) ? (
+                                    <textarea
+                                      value={tempPoints[point._id] || point.content}
+                                      onChange={(e) => setTempPoints(prev => ({ ...prev, [point._id]: e.target.value }))}
+                                      className="point-textarea"
+                                      rows="2"
+                                      placeholder="Edit important point..."
+                                    />
+                                  ) : (
+                                    <span className="point-text">{point.content}</span>
+                                  )}
+                                </div>
+                                <div className="point-actions">
+                                  {editingPoints.has(point._id) ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleUpdatePoint(lead._id, point._id, tempPoints[point._id] || point.content)}
+                                        disabled={updatingPoint.has(point._id)}
+                                        className="action-btn save-btn"
+                                        title="Save changes"
+                                      >
+                                        {updatingPoint.has(point._id) ? (
+                                          <div className="mini-spinner"></div>
+                                        ) : (
+                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                            <polyline points="17,21 17,13 7,13 7,21"></polyline>
+                                            <polyline points="7,3 7,8 15,8"></polyline>
+                                          </svg>
+                                        )}
+                                      </button>
+                                      <button
+                                        onClick={() => handleCancelEdit(point._id)}
+                                        disabled={updatingPoint.has(point._id)}
+                                        className="action-btn cancel-btn"
+                                        title="Cancel edit"
+                                      >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <path d="M18 6L6 18M6 6l12 12"></path>
+                                        </svg>
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => handleEditPoints(point._id, point.content)}
+                                        className="action-btn edit-btn"
+                                        title="Edit point"
+                                      >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeletePoint(lead._id, point._id)}
+                                        disabled={deletingPoint.has(point._id)}
+                                        className="action-btn delete-btn"
+                                        title="Delete point"
+                                      >
+                                        {deletingPoint.has(point._id) ? (
+                                          <div className="mini-spinner"></div>
+                                        ) : (
+                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                          </svg>
+                                        )}
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Add new point input */}
                         <div className="add-new-point">
                           <textarea
-                            value={(() => {
-                              // Always show the current user input if it exists
-                              if (tempPoints[`new_${lead._id}`] !== undefined) {
-                                return tempPoints[`new_${lead._id}`];
-                              }
-                              
-                              // Only show existing points if no user input and points exist
-                              if (importantPoints[lead._id] && importantPoints[lead._id].length > 0) {
-                                return importantPoints[lead._id]
-                                  .map(point => point.content)
-                                  .join('\n');
-                              }
-                              
-                              return '';
-                            })()}
-                            onChange={(e) => {
-                              const newValue = e.target.value;
-                              setTempPoints(prev => ({ ...prev, [`new_${lead._id}`]: newValue }));
-                            }}
-                            placeholder="Type or edit important points here... (one per line)"
+                            value={tempPoints[`new_${lead._id}`] || ''}
+                            onChange={(e) => setTempPoints(prev => ({ ...prev, [`new_${lead._id}`]: e.target.value }))}
+                            placeholder="Type a new important point..."
                             className="new-point-textarea"
-                            rows="6"
+                            rows="2"
                             disabled={creatingPoint.has(lead._id)}
-                            readOnly={false}
                           />
-                          
                           <div className="new-point-actions">
                             <button
                               onClick={() => handleCreatePoint(lead._id)}
-                              disabled={creatingPoint.has(lead._id)}
+                              disabled={creatingPoint.has(lead._id) || !tempPoints[`new_${lead._id}`]?.trim()}
                               className="action-btn add-btn"
                             >
                               {creatingPoint.has(lead._id) ? (
@@ -1575,11 +1619,9 @@ const Call = () => {
                               ) : (
                                 <>
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                                    <polyline points="17,21 17,13 7,13 7,21"></polyline>
-                                    <polyline points="7,3 7,8 15,8"></polyline>
+                                    <path d="M12 5v14M5 12h14"></path>
                                   </svg>
-                                  Save All Points
+                                  Add Point
                                 </>
                               )}
                             </button>
