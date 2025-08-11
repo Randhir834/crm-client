@@ -6,6 +6,8 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 import Leads from './components/Leads';
+import Call from './components/Call';
+import CallDone from './components/CallDone';
 import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
@@ -42,6 +44,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Leads />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/call" 
+              element={
+                <ProtectedRoute>
+                  <Call />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/call-done" 
+              element={
+                <ProtectedRoute>
+                  <CallDone />
                 </ProtectedRoute>
               } 
             />

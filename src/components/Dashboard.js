@@ -96,7 +96,7 @@ const Dashboard = () => {
 
 
       // Fetch all leads for activity feed
-      const leadsResponse = await axios.get(getApiUrl('api/leads?limit=1000'), {
+      const leadsResponse = await axios.get(getApiUrl('api/leads?limit=10000'), {
         headers: { Authorization: `Bearer ${token}` }
       });
 

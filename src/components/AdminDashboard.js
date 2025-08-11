@@ -69,6 +69,7 @@ const AdminDashboard = () => {
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
+
         setUsers(usersData.users || []);
       } else {
         console.error('Failed to fetch users with sessions:', usersResponse.status);
@@ -92,6 +93,76 @@ const AdminDashboard = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const updateUserRole = async (userId, newRole) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl(`api/auth/users/${userId}/role`), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+
+      if (response.ok) {
+        // Update the user's role locally
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user._id === userId ? { ...user, role: newRole } : user
+          )
+        );
+        console.log(`Successfully updated user role to ${newRole}`);
+      } else {
+        console.error('Failed to update user role:', response.status);
+        alert('Failed to update user role. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      alert('Error updating user role. Please try again.');
+    }
+  };
+
+  const fixAllUserRoles = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fix each user's role
+      for (const user of users) {
+        if (!user.role || user.role === '') {
+          let newRole = 'user';
+          
+          // Make Innovatiqmedia admin
+          if (user.email === 'innovatiqmedia@gmail.com') {
+            newRole = 'admin';
+          }
+          
+          const response = await fetch(getApiUrl(`api/auth/users/${user._id}/role`), {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ role: newRole })
+          });
+
+          if (response.ok) {
+            console.log(`Fixed role for ${user.name}: ${newRole}`);
+          } else {
+            console.error(`Failed to fix role for ${user.name}`);
+          }
+        }
+      }
+      
+      // Refresh the data
+      await fetchAdminData();
+      alert('User roles have been fixed!');
+    } catch (error) {
+      console.error('Error fixing user roles:', error);
+      alert('Error fixing user roles. Please try again.');
+    }
   };
 
   const formatDuration = (milliseconds) => {
@@ -239,6 +310,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+
+
         {/* User Management */}
         <div className="content-section">
           <div className="section-header">
@@ -256,6 +329,7 @@ const AdminDashboard = () => {
                 </svg>
                 Registration
               </button>
+
             </div>
           </div>
           
@@ -266,11 +340,11 @@ const AdminDashboard = () => {
                   <tr>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
                     <th>First Login Time</th>
                     <th>Last Activity</th>
                     <th>Daily Usage</th>
+                    <th>Role</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -285,14 +359,6 @@ const AdminDashboard = () => {
                         </div>
                       </td>
                       <td className="user-email">{user.email}</td>
-                      <td>
-                        <span className={`role-badge ${user.role}`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td>
-                        {getSessionStatus(user)}
-                      </td>
                       <td>
                         <div className="activity-info">
                           <div className="activity-time">{formatDate(user.firstLoginTime)}</div>
@@ -318,7 +384,26 @@ const AdminDashboard = () => {
                           )}
                         </div>
                       </td>
-
+                      <td>
+                        <span className={`role-badge ${user.role || 'user'}`}>
+                          {user.role === 'admin' ? 'Admin' : 'User'}
+                        </span>
+                        <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '0.7rem' }}>
+                          Raw: {user.role || 'undefined'}
+                        </small>
+                        {user.email === 'innovatiqmedia@gmail.com' && user.role !== 'admin' && (
+                          <button 
+                            className="btn btn-primary"
+                            style={{ marginLeft: '8px', fontSize: '0.7rem', padding: '2px 6px' }}
+                            onClick={() => updateUserRole(user._id, 'admin')}
+                          >
+                            Make Admin
+                          </button>
+                        )}
+                      </td>
+                      <td>
+                        {getSessionStatus(user)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

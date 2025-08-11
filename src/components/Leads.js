@@ -14,18 +14,9 @@ const Leads = () => {
   const [editingLead, setEditingLead] = useState(null);
 
 
-  const [stats, setStats] = useState({
-    total: 0,
-    new: 0,
-    qualified: 0,
-    negotiation: 0,
-    closed: 0,
-    lost: 0
-  });
   const [filteredLeads, setFilteredLeads] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('New');
 
-  const [processingLead, setProcessingLead] = useState(null);
+
 
   const fileInputRef = useRef(null);
   
@@ -35,38 +26,20 @@ const Leads = () => {
   const [users, setUsers] = useState([]);
 
 
-  // Memoized function to update stats based on leads data
-  const updateStatsFromLeads = useCallback((leadsData) => {
-    const newStats = {
-      total: leadsData.length,
-      new: leadsData.filter(lead => lead.status === 'New').length,
-      qualified: leadsData.filter(lead => lead.status === 'Qualified').length,
-      negotiation: leadsData.filter(lead => lead.status === 'Negotiation').length,
-      closed: leadsData.filter(lead => lead.status === 'Closed').length,
-      lost: leadsData.filter(lead => lead.status === 'Lost').length
-    };
-    setStats(newStats);
-  }, []);
+
 
   // Memoized function to update filtered leads
-  const updateFilteredLeads = useCallback((leadsData, statusFilter) => {
-    let filtered = leadsData;
-    
-    // Apply status filter
-    if (statusFilter !== 'All') {
-      filtered = filtered.filter(lead => lead.status === statusFilter);
-    }
-    
-
-    
-    setFilteredLeads(filtered);
+  const updateFilteredLeads = useCallback((leadsData) => {
+    // Show all leads (no filtering)
+    setFilteredLeads(leadsData);
   }, []);
 
   // Fetch leads from API
-  const fetchLeads = async (isAutomaticRefresh = false) => {
+  const fetchLeads = useCallback(async (silent = false) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl('api/leads?limit=1000'), {
+      // Request ALL leads by setting a very high limit
+      const response = await fetch(getApiUrl('api/leads?limit=10000'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -77,9 +50,16 @@ const Leads = () => {
         const data = await response.json();
         const leadsData = data.leads || [];
         
+        if (!silent) {
+          console.log('📊 Fetched leads data:', {
+            total: leadsData.length,
+            sampleData: leadsData.slice(0, 3).map(l => ({ name: l.name, status: l.status })),
+            note: 'All leads fetched (no pagination limit)'
+          });
+        }
+        
         setLeads(leadsData);
-        updateFilteredLeads(leadsData, activeFilter);
-        updateStatsFromLeads(leadsData);
+        updateFilteredLeads(leadsData);
       } else {
         console.error('Failed to fetch leads:', response.status, response.statusText);
       }
@@ -88,7 +68,7 @@ const Leads = () => {
     } finally {
       setInitialLoad(false);
     }
-  };
+  }, [updateFilteredLeads]);
 
   // Fetch users for assignment (admin only)
   const fetchUsers = async () => {
@@ -120,10 +100,10 @@ const Leads = () => {
     const initializeLeads = async () => {
       await fetchLeads();
       
-      // Ensure New leads are properly filtered on initial load
-      if (activeFilter === 'New' && leads.length > 0) {
-        updateFilteredLeads(leads, activeFilter);
-      }
+              // Ensure all leads are properly displayed on initial load
+        if (leads.length > 0) {
+          updateFilteredLeads(leads);
+        }
     };
     
     initializeLeads();
@@ -138,30 +118,25 @@ const Leads = () => {
       fetchLeads(true);
     };
     
-    // Listen for lead status update events from other components
-    const handleLeadStatusUpdated = (event) => {
-      fetchLeads(true);
-    };
+
     
     window.addEventListener('leadDeleted', handleLeadDeleted);
     window.addEventListener('leadsImported', handleLeadsImported);
-    window.addEventListener('leadStatusUpdated', handleLeadStatusUpdated);
     
     return () => {
       window.removeEventListener('leadDeleted', handleLeadDeleted);
       window.removeEventListener('leadsImported', handleLeadsImported);
-      window.removeEventListener('leadStatusUpdated', handleLeadStatusUpdated);
     };
-  }, []);
+  }, [fetchLeads, leads, updateFilteredLeads]);
 
-  // Effect to update filtered leads when activeFilter or leads change
+  // Effect to update filtered leads when leads change
   useEffect(() => {
     if (leads.length > 0) {
-      updateFilteredLeads(leads, activeFilter);
+      updateFilteredLeads(leads);
     } else if (leads.length === 0) {
       setFilteredLeads([]);
     }
-  }, [activeFilter, leads, updateFilteredLeads]);
+  }, [leads, updateFilteredLeads]);
 
   const handleImport = () => {
     if (isAdmin) {
@@ -187,20 +162,30 @@ const Leads = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Reset file input for re-uploads
     event.target.value = '';
 
-
+    console.log('🚀 Starting file upload...', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      selectedUser: selectedUser
+    });
 
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
     
+    // Add assigned user if admin has selected one
     if (isAdmin && selectedUser) {
       formData.append('assignedTo', selectedUser);
+      console.log('👤 Adding assignedTo:', selectedUser);
     }
 
     try {
       const token = localStorage.getItem('token');
+      console.log('📤 Sending upload request to server...');
+      
       const response = await fetch(getApiUrl('api/leads/upload'), {
         method: 'POST',
         headers: {
@@ -210,11 +195,23 @@ const Leads = () => {
       });
 
       const data = await response.json();
+      console.log('📥 Upload response received:', data);
 
       if (response.ok) {
-
+        console.log('✅ Upload successful!', {
+          count: data.count,
+          totalLeads: data.leads ? data.leads.length : 0
+        });
         
         setSelectedUser(null);
+        
+        // Log uploaded leads data for debugging
+        if (data.leads && data.leads.length > 0) {
+          console.log('🔍 Uploaded leads data:');
+          data.leads.forEach((lead, index) => {
+            console.log(`  Lead ${index + 1}: ${lead.name} → Status: "${lead.status}"`);
+          });
+        }
         
         // Optimistically update the UI
         if (data.leads && data.leads.length > 0) {
@@ -225,19 +222,36 @@ const Leads = () => {
             createdBy: lead.createdBy || { _id: user._id, name: user.name }
           }));
           
+          console.log('🎯 Adding leads to UI:', newLeads.map(l => ({ name: l.name, status: l.status })));
           setLeads(prevLeads => [...newLeads, ...prevLeads]);
         }
         
-        // Refresh data in background
+        // Refresh data in background to ensure consistency
+        console.log('🔄 Refreshing leads data...');
         fetchLeads(true);
         
-        // Dispatch custom event
+        // Dispatch custom event for notifications
         window.dispatchEvent(new CustomEvent('leadsImported', { 
-          detail: { count: data.count } 
+          detail: { 
+            count: data.count
+          } 
         }));
+      } else {
+        // Handle upload errors
+        console.error('❌ Upload failed:', {
+          status: response.status,
+          message: data.message,
+          error: data.error
+        });
+        
+        alert(`Upload failed: ${data.message || 'Unknown error occurred'}. Please check the console for details.`);
       }
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      alert(`Upload error: ${error.message}. Please check your internet connection and try again.`);
     } finally {
       setUploading(false);
+      console.log('🏁 Upload process completed');
     }
   };
 
@@ -287,11 +301,7 @@ const Leads = () => {
         // Optimistically remove the lead from local state
         setLeads(prevLeads => prevLeads.filter(lead => lead._id !== leadId));
         
-        // Update stats immediately
-        setStats(prevStats => ({
-          ...prevStats,
-          total: prevStats.total - 1
-        }));
+
         
         // Dispatch custom event
         window.dispatchEvent(new CustomEvent('leadDeleted', { 
@@ -318,82 +328,14 @@ const Leads = () => {
     }
   };
 
-  const handleStatusChange = async (leadId, newStatus) => {
-    try {
-      setProcessingLead(leadId);
-      
-      const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl(`api/leads/${leadId}/status`), {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
 
-      if (response.ok) {
-        // Optimistically update the lead status
-        setLeads(prevLeads => {
-          const updatedLeads = prevLeads.map(lead => 
-            lead._id === leadId 
-              ? { ...lead, status: newStatus }
-              : lead
-          );
-          
-          // Update filtered leads immediately
-          updateFilteredLeads(updatedLeads, activeFilter);
-          
-          return updatedLeads;
-        });
-
-        // Update stats immediately
-        setStats(prevStats => {
-          const newStats = { ...prevStats };
-          
-          // Decrease count from old status
-          if (activeFilter !== 'All') {
-            const oldStatus = leads.find(lead => lead._id === leadId)?.status;
-            if (oldStatus && newStats[oldStatus.toLowerCase()] > 0) {
-              newStats[oldStatus.toLowerCase()]--;
-            }
-          }
-          
-          // Increase count for new status
-          if (newStats[newStatus.toLowerCase()] !== undefined) {
-            newStats[newStatus.toLowerCase()]++;
-          }
-          
-          return newStats;
-        });
-
-        // Dispatch custom event
-        window.dispatchEvent(new CustomEvent('leadStatusUpdated', { 
-          detail: { leadId: leadId, newStatus: newStatus } 
-        }));
-
-        // Refresh in background
-        fetchLeads(true);
-      } else {
-        console.error('Failed to update lead status');
-      }
-    } catch (error) {
-      console.error('Status update error:', error);
-    } finally {
-      setProcessingLead(null);
-    }
-  };
 
   const handleEditLead = (lead) => {
     setEditingLead({
       _id: lead._id,
       name: lead.name,
       phone: lead.phone || '',
-      service: lead.service || '',
-      status: lead.status,
-      
       notes: lead.notes || '',
-
     });
     setShowEditModal(true);
   };
@@ -442,21 +384,9 @@ const Leads = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'New': return '#3B82F6';
-      case 'Qualified': return '#10B981';
-      case 'Negotiation': return '#F59E0B';
-      case 'Closed': return '#059669';
-      case 'Lost': return '#EF4444';
-      default: return '#6B7280';
-    }
-  };
 
-  const filterLeads = (status) => {
-    setActiveFilter(status);
-    updateFilteredLeads(leads, status);
-  };
+
+
 
 
 
@@ -498,125 +428,17 @@ const Leads = () => {
             <p>Track, manage, and convert your leads into successful partnerships</p>
           </div>
           <div className="header-actions">
-            <div className="quick-stats">
-              <span className="stat-highlight">{stats.total} Total Leads</span>
-              <span className="stat-highlight">{stats.new} New This Month</span>
-            </div>
           </div>
         </div>
 
-        <div className="stats-grid">
-          <div 
-            className={`stat-card total-leads ${activeFilter === 'All' ? 'active-filter' : ''}`}
-            onClick={() => filterLeads('All')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>{stats.total}</h3>
-              <p>Total Leads</p>
-            </div>
-          </div>
 
-          <div 
-            className={`stat-card new-leads ${activeFilter === 'New' ? 'active-filter' : ''}`}
-            onClick={() => filterLeads('New')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>{stats.new}</h3>
-              <p>New Leads</p>
-            </div>
-          </div>
-
-          <div 
-            className={`stat-card qualified-leads ${activeFilter === 'Qualified' ? 'active-filter' : ''}`}
-            onClick={() => filterLeads('Qualified')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>{stats.qualified}</h3>
-              <p>Qualified</p>
-            </div>
-          </div>
-
-          <div 
-            className={`stat-card negotiation-leads ${activeFilter === 'Negotiation' ? 'active-filter' : ''}`}
-            onClick={() => filterLeads('Negotiation')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>{stats.negotiation}</h3>
-              <p>In Negotiation</p>
-            </div>
-          </div>
-
-          <div 
-            className={`stat-card closed-leads ${activeFilter === 'Closed' ? 'active-filter' : ''}`}
-            onClick={() => filterLeads('Closed')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 12l2 2 4-4m6 2a9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>{stats.closed}</h3>
-              <p>Closed</p>
-            </div>
-          </div>
-
-          <div 
-            className={`stat-card lost-leads ${activeFilter === 'Lost' ? 'active-filter' : ''}`}
-            onClick={() => filterLeads('Lost')}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </div>
-            <div className="stat-content">
-              <h3>{stats.lost}</h3>
-              <p>Lost</p>
-            </div>
-          </div>
-        </div>
 
         <div className="content-section">
           <div className="section-header">
-            <div className="section-title">
-              <h2>
-                {activeFilter === 'All' ? 'All Leads' :
-                 activeFilter === 'New' ? 'New Leads' :
-                 activeFilter === 'Qualified' ? 'Qualified Leads' :
-                 activeFilter === 'Negotiation' ? 'Leads In Negotiation' :
-                 activeFilter === 'Closed' ? 'Closed Leads' :
-                 activeFilter === 'Lost' ? 'Lost Leads' : 'New Leads'}
-              </h2>
+                                <div className="section-title">
+              <h2>All Leads</h2>
               <p>
-                {`Showing ${filteredLeads.length} ${activeFilter === 'All' ? 'total' : activeFilter.toLowerCase()} lead${filteredLeads.length !== 1 ? 's' : ''}`}
-        
+                {`Showing ${filteredLeads.length} total leads (All uploaded leads displayed)`}
               </p>
             </div>
             <div className="section-filters">
@@ -658,7 +480,6 @@ const Leads = () => {
                     <th>Name</th>
                     <th>Phone</th>
                     <th>Service</th>
-                    <th>Status</th>
                     <th>Assigned To</th>
                     <th>Uploaded By</th>
                     <th>Created</th>
@@ -677,21 +498,16 @@ const Leads = () => {
                         </div>
                       </td>
                       <td>{lead.phone}</td>
-                      <td>{lead.service}</td>
                       <td>
-                        <select
-                          className={`status-select ${processingLead === lead._id ? 'processing' : ''}`}
-                          value={lead.status}
-                          onChange={(e) => handleStatusChange(lead._id, e.target.value)}
-                          style={{ backgroundColor: getStatusColor(lead.status) }}
-                          disabled={processingLead === lead._id}
-                        >
-                          <option value="New">New</option>
-                          <option value="Qualified">Qualified</option>
-                          <option value="Negotiation">Negotiation</option>
-                          <option value="Closed">Closed</option>
-                          <option value="Lost">Lost</option>
-                        </select>
+                        <div className="service-cell">
+                          {lead.notes ? (
+                            <span className="service-text" title={lead.notes}>
+                              {lead.notes}
+                            </span>
+                          ) : (
+                            <span className="no-service">No service</span>
+                          )}
+                        </div>
                       </td>
                       <td>
                         {lead.assignedTo && (lead.assignedTo.name || lead.assignedTo._id) ? (
@@ -811,33 +627,10 @@ const Leads = () => {
                       onChange={(e) => setEditingLead({...editingLead, phone: e.target.value})}
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Service</label>
-                    <input
-                      type="text"
-                      value={editingLead.service}
-                      onChange={(e) => setEditingLead({...editingLead, service: e.target.value})}
-                      placeholder="e.g., Web Design, SEO, Marketing"
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Status</label>
-                    <select
-                      value={editingLead.status}
-                      onChange={(e) => setEditingLead({...editingLead, status: e.target.value})}
-                    >
-                      <option value="New">New</option>
-                      <option value="Qualified">Qualified</option>
-                      <option value="Negotiation">Negotiation</option>
-                      <option value="Closed">Closed</option>
-                      <option value="Lost">Lost</option>
-                    </select>
-                  </div>
 
                 </div>
+                
+
                 
                 <div className="form-group">
                   <label>Notes</label>
