@@ -309,33 +309,16 @@ const Call = () => {
         const timeString = scheduledTime.toLocaleString();
         alert(`✅ Call not connected!\n\n📞 Follow-up call automatically scheduled for:\n${timeString}\n\nYou'll be notified 15 minutes before the scheduled time.`);
         
-        // IMMEDIATELY update local scheduledCalls state to trigger re-sorting
-        const newScheduledCall = {
-          _id: result.scheduledCall._id,
-          leadId: leadId,
-          scheduledTime: result.scheduledTime,
-          status: 'pending',
-          notes: 'Auto-scheduled after call not connected',
-          createdBy: result.scheduledCall.createdBy,
-          createdAt: result.scheduledCall.createdAt,
-          updatedAt: result.scheduledCall.updatedAt
-        };
-        
-        setScheduledCalls(prev => ({
-          ...prev,
-          [leadId]: [...(prev[leadId] || []), newScheduledCall]
-        }));
-        
-        // Force immediate re-render to update priority sorting
-        setForceUpdate(prev => prev + 1);
-        
-        // Also refresh scheduled calls for this lead to ensure consistency
+        // Refresh scheduled calls for this lead silently
         try {
           await fetchScheduledCallsForLead(leadId, true);
         } catch (refreshError) {
           // Silent error handling for refresh - don't show to user
           console.warn('Silent refresh failed for lead:', leadId, refreshError);
         }
+        
+        // Force re-render to update priority sorting
+        setForceUpdate(prev => prev + 1);
         
       } else {
         console.error('Failed to handle call not connected:', response.status);
