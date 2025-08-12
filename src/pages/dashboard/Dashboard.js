@@ -810,17 +810,7 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            {recentActivity.length > 0 && (
-              <div className="activity-footer">
-                <button 
-                  className="btn-text" 
-                  onClick={() => fetchDashboardData()}
-                  style={{ fontSize: '0.85rem', color: '#6b7280' }}
-                >
-                  Refresh Activity
-                </button>
-              </div>
-            )}
+
           </div>
 
 
