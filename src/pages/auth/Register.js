@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getApiUrl } from '../../services/api';
 import '../../styles/Auth.css';
-
+import bgImage from '../../assets/bg_image.jpg'; // ✅ Import background image
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -20,8 +20,7 @@ const Register = () => {
   const { register, error, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Check if we came from admin dashboard
+
   const isFromAdmin = location.state?.fromAdmin || document.referrer.includes('/admin');
 
   useEffect(() => {
@@ -50,7 +49,7 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -96,7 +95,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -109,7 +108,6 @@ const Register = () => {
     setIsSubmitting(false);
 
     if (result.success) {
-      // Navigate back to admin dashboard if accessed from admin, otherwise to login
       if (isFromAdmin) {
         navigate('/admin');
       } else {
@@ -119,21 +117,36 @@ const Register = () => {
   };
 
   return (
-    <div className="login-two-column-container">
-      <div className="login-left">
-        {isFromAdmin && (
-          <></>
-        )}
+    <div
+      style={{
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      <div
+        style={{
+          background: 'rgba(255, 255, 255, 0.9)',
+          padding: '40px',
+          borderRadius: '8px',
+          maxWidth: '500px',
+          width: '100%'
+        }}
+      >
+        {isFromAdmin && <></>}
         <div className="auth-header">
-          <div style={{display: 'flex', justifyContent: 'center', marginBottom: 24}}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
             <img src="/logo512.png" alt="Logo" style={{ width: '64px', height: '64px' }} />
           </div>
           <h2>Create New Account</h2>
           <p className="auth-subtitle">
-            {isFirstUser 
-              ? 'Welcome! You\'re setting up the first admin account' 
-              : 'Join us today'
-            }
+            {isFirstUser
+              ? 'Welcome! You\'re setting up the first admin account'
+              : 'Join us today'}
           </p>
         </div>
         {error && (
@@ -209,20 +222,14 @@ const Register = () => {
             <div className="role-description">
               {isFirstUser && (
                 <p className="role-info admin">
-                  <strong>🎉 First User Setup:</strong> You're creating the first account in the system. 
+                  <strong>🎉 First User Setup:</strong> You're creating the first account in the system.
                   This will automatically be an admin account with full system access.
                 </p>
               )}
-              {!isFirstUser && formData.role === 'user' && (
-                <></>
-              )}
-              {!isFirstUser && formData.role === 'admin' && (
-                <></>
-              )}
             </div>
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="auth-button"
             disabled={isSubmitting}
           >
@@ -230,11 +237,8 @@ const Register = () => {
           </button>
         </form>
       </div>
-      <div className="login-right">
-        <img src="/logo192.png" alt="Register Visual" className="login-animation-image register-animation-image" />
-      </div>
     </div>
   );
 };
 
-export default Register; 
+export default Register;
