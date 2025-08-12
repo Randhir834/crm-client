@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { getApiUrl } from '../../services/api';
 import '../../styles/Auth.css';
+import backgroundImage from '../../assets/Untitled-1.jpg';
 
 
 const ForgotPassword = () => {
@@ -52,47 +53,49 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="login-two-column-container">
-      <div className="login-left">
-        <div className="login-left-center">
-          <div style={{display: 'flex', justifyContent: 'center', marginBottom: 24}}>
-            <img src="/logo512.png" alt="Logo" style={{ width: '64px', height: '64px' }} />
-          </div>
-          <h2 style={{ textAlign: 'center', width: '100%' }}>Forgot Password?</h2>
-          <p className="auth-subtitle" style={{ textAlign: 'center', width: '100%', marginBottom: 32 }}>
-            Enter your email to reset your password
-          </p>
-          {error && (
-            <div className="error-message">
-              <div className="error-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
-              </div>
-              <span>{error}</span>
-            </div>
-          )}
-          {isSuccess && message && (
-            <div className="success-message">
-              <div className="success-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              </div>
-              <span>{message}</span>
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-group">
-              <label htmlFor="email">
-                <div className="label-icon">
+    <div className="login-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
+      {/* Left Side - Empty Space */}
+      <div className="login-left-side">
+        {/* Clean left side with gradient background */}
+      </div>
+      
+      {/* Right Side - Login Form Overlay */}
+      <div className="login-right-side">
+        <div className="login-form-overlay">
+          <div className="login-form-container">
+            
+            {error && (
+              <div className="error-message">
+                <div className="error-icon">
                   <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                   </svg>
                 </div>
-                Email Address
-              </label>
-              <div className="input-wrapper">
+                <span>{error}</span>
+              </div>
+            )}
+            
+            {isSuccess && message && (
+              <div className="success-message">
+                <div className="success-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                </div>
+                <span>{message}</span>
+              </div>
+            )}
+            
+            <form onSubmit={handleSubmit} className="auth-form">
+              <div className="form-group">
+                <label htmlFor="email">
+                  <div className="label-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                  </div>
+                  Email Address
+                </label>
                 <input
                   type="email"
                   id="email"
@@ -102,41 +105,39 @@ const ForgotPassword = () => {
                   placeholder="Enter your email address"
                   disabled={isSubmitting}
                 />
-                <div className="input-border"></div>
               </div>
+              
+              <button 
+                type="submit" 
+                className="auth-button"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="spinner"></div>
+                    Sending reset link...
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Send Reset Link
+                  </>
+                )}
+              </button>
+            </form>
+            
+            <div className="auth-footer">
+              <p>
+                Remember your password?{' '}
+                <Link to="/login" className="auth-link">
+                  Sign in here
+                </Link>
+              </p>
             </div>
-            <button 
-              type="submit" 
-              className="auth-button"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="spinner"></div>
-                  Sending reset link...
-                </>
-              ) : (
-                <>
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
-                  Send Reset Link
-                </>
-              )}
-            </button>
-          </form>
-          <div className="auth-footer">
-            <p>
-              Remember your password?{' '}
-              <Link to="/login" className="auth-link">
-                Sign in here
-              </Link>
-            </p>
           </div>
         </div>
-      </div>
-      <div className="login-right">
-        <img src="/logo192.png" alt="Forgot Visual" className="login-animation-image" />
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../../styles/global.css';
 import './Navigation.css';
-import logoImage from '../../assets/logo.png';
+// Logo is in public directory, so we can reference it directly
 
 const Navigation = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -26,12 +26,13 @@ const Navigation = () => {
   return (
     <nav className="app-navigation">
       <div className="nav-left">
-        <div className="nav-brand">
-          <div className="brand-logo">
-            <img src={logoImage} alt="Innovatiq Media CRM" className="logo-image" />
+                  <div className="nav-brand">
+            <div className="animated-logo">
+              <img src={require('../../assets/logo.png')} alt="Innovatiq Media CRM" className="logo-image" />
+              <div className="logo-glow"></div>
+            </div>
+            <h1>{getPageTitle().replace(/^[^\w]*/,'')}</h1>
           </div>
-          <h1>{getPageTitle().replace(/^[^\w]*/,'')}</h1>
-        </div>
       </div>
       
       <div className="nav-center">

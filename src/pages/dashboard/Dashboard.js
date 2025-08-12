@@ -47,7 +47,7 @@ const Dashboard = () => {
       
       // Remove any activities related to the deleted lead
       setRecentActivity(prevActivities => 
-        prevActivities.filter(activity => !activity.id.includes(event.detail.leadId))
+        prevActivities.filter(activity => !activity.leadId || activity.leadId !== event.detail.leadId)
       );
     };
     
@@ -60,8 +60,17 @@ const Dashboard = () => {
         activeLeads: prevStats.activeLeads + event.detail.count
       }));
       
-      // Refresh dashboard data to get updated activity feed
-      fetchDashboardData();
+      // Add import activity to recent activity
+      const importActivity = {
+        id: `import_${Date.now()}`,
+        type: 'lead_added',
+        message: `${event.detail.count} leads imported`,
+        time: new Date(),
+        details: `Bulk import completed successfully`,
+        status: 'active'
+      };
+      
+      setRecentActivity(prevActivities => [importActivity, ...prevActivities.slice(0, 9)]);
     };
     
     // Listen for lead status update events from other components
@@ -69,15 +78,91 @@ const Dashboard = () => {
       // Refresh dashboard data to get updated statistics and activity feed
       fetchDashboardData();
     };
+
+    // Listen for call completion events
+    const handleCallCompleted = (event) => {
+      const { leadId, leadName, duration } = event.detail;
+      
+      const callActivity = {
+        id: `call_completed_${Date.now()}`,
+        type: 'call_completed',
+        message: `Call completed with "${leadName}"`,
+        time: new Date(),
+        details: `Call duration: ${formatDuration(duration || 0)}`,
+        status: 'completed',
+        leadId: leadId
+      };
+      
+      setRecentActivity(prevActivities => [callActivity, ...prevActivities.slice(0, 9)]);
+    };
+
+    // Listen for follow-up scheduling events
+    const handleFollowUpScheduled = (event) => {
+      const { leadId, leadName, followUpDate } = event.detail;
+      
+      const followUpActivity = {
+        id: `followup_scheduled_${Date.now()}`,
+        type: 'followup_scheduled',
+        message: `Follow-up scheduled for "${leadName}"`,
+        time: new Date(),
+        details: `Follow-up date: ${new Date(followUpDate).toLocaleDateString()}`,
+        status: 'scheduled',
+        leadId: leadId
+      };
+      
+      setRecentActivity(prevActivities => [followUpActivity, ...prevActivities.slice(0, 9)]);
+    };
+
+    // Listen for notes added events
+    const handleNotesAdded = (event) => {
+      const { leadId, leadName, notes } = event.detail;
+      
+      const notesActivity = {
+        id: `notes_added_${Date.now()}`,
+        type: 'notes_added',
+        message: `Notes added to "${leadName}"`,
+        time: new Date(),
+        details: `Notes: ${notes.substring(0, 50)}${notes.length > 50 ? '...' : ''}`,
+        status: 'active',
+        leadId: leadId
+      };
+      
+      setRecentActivity(prevActivities => [notesActivity, ...prevActivities.slice(0, 9)]);
+    };
+
+    // Listen for lead assignment events
+    const handleLeadAssigned = (event) => {
+      const { leadId, leadName, assignedTo } = event.detail;
+      
+      const assignmentActivity = {
+        id: `lead_assigned_${Date.now()}`,
+        type: 'lead_assigned',
+        message: `Lead "${leadName}" assigned`,
+        time: new Date(),
+        details: `Assigned to: ${assignedTo}`,
+        status: 'active',
+        leadId: leadId
+      };
+      
+      setRecentActivity(prevActivities => [assignmentActivity, ...prevActivities.slice(0, 9)]);
+    };
     
     window.addEventListener('leadDeleted', handleLeadDeleted);
     window.addEventListener('leadsImported', handleLeadsImported);
     window.addEventListener('leadStatusUpdated', handleLeadStatusUpdated);
+    window.addEventListener('callCompleted', handleCallCompleted);
+    window.addEventListener('followUpScheduled', handleFollowUpScheduled);
+    window.addEventListener('notesAdded', handleNotesAdded);
+    window.addEventListener('leadAssigned', handleLeadAssigned);
     
     return () => {
       window.removeEventListener('leadDeleted', handleLeadDeleted);
       window.removeEventListener('leadsImported', handleLeadsImported);
       window.removeEventListener('leadStatusUpdated', handleLeadStatusUpdated);
+      window.removeEventListener('callCompleted', handleCallCompleted);
+      window.removeEventListener('followUpScheduled', handleFollowUpScheduled);
+      window.removeEventListener('notesAdded', handleNotesAdded);
+      window.removeEventListener('leadAssigned', handleLeadAssigned);
     };
   }, []);
 
@@ -94,8 +179,6 @@ const Dashboard = () => {
       const leadsStatsResponse = await axios.get(getApiUrl('api/leads/stats'), {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-
 
       // Fetch all leads for activity feed
       const leadsResponse = await axios.get(getApiUrl('api/leads?limit=10000'), {
@@ -115,8 +198,6 @@ const Dashboard = () => {
           activeLeads
         });
 
-              
-
         // Generate comprehensive recent activity
         const activities = [];
 
@@ -128,8 +209,9 @@ const Dashboard = () => {
             type: 'lead_added',
             message: `New lead "${lead.name}" added`,
             time: new Date(lead.createdAt || lead.created_at || Date.now()),
-            details: `Lead added`,
-            status: lead.status
+            details: `Phone: ${lead.phone} • Status: ${lead.status}`,
+            status: lead.status,
+            leadId: lead._id
           });
 
           // Lead status changes (if updated recently)
@@ -143,17 +225,95 @@ const Dashboard = () => {
                 type: 'lead_updated',
                 message: `Lead "${lead.name}" status updated`,
                 time: updatedAt,
-                details: `Status: ${lead.status}`,
-                status: lead.status
+                details: `Status changed to: ${lead.status}`,
+                status: lead.status,
+                leadId: lead._id
               });
             }
           }
+
+          // Lead assignment (if assigned to someone)
+          if (lead.assignedTo && lead.assignedTo !== lead.createdBy) {
+            activities.push({
+              id: `lead_assigned_${lead._id}`,
+              type: 'lead_assigned',
+              message: `Lead "${lead.name}" assigned`,
+              time: new Date(lead.updatedAt || lead.updated_at || Date.now()),
+              details: `Assigned to team member`,
+              status: lead.status,
+              leadId: lead._id
+            });
+          }
+
+          // Notes added (if lead has notes)
+          if (lead.notes && lead.notes.trim()) {
+            activities.push({
+              id: `lead_notes_${lead._id}`,
+              type: 'notes_added',
+              message: `Notes added to "${lead.name}"`,
+              time: new Date(lead.updatedAt || lead.updated_at || Date.now()),
+              details: `Notes: ${lead.notes.substring(0, 50)}${lead.notes.length > 50 ? '...' : ''}`,
+              status: lead.status,
+              leadId: lead._id
+            });
+          }
+
+          // Call completion status (if callCompleted field exists)
+          if (lead.callCompleted) {
+            activities.push({
+              id: `call_completed_${lead._id}`,
+              type: 'call_completed',
+              message: `Call completed with "${lead.name}"`,
+              time: new Date(lead.updatedAt || lead.updated_at || Date.now()),
+              details: `Call marked as completed`,
+              status: 'completed',
+              leadId: lead._id
+            });
+          }
+
+          // Follow-up scheduling (if followUpDate field exists)
+          if (lead.followUpDate) {
+            activities.push({
+              id: `followup_scheduled_${lead._id}`,
+              type: 'followup_scheduled',
+              message: `Follow-up scheduled for "${lead.name}"`,
+              time: new Date(lead.followUpDate),
+              details: `Follow-up date: ${new Date(lead.followUpDate).toLocaleDateString()}`,
+              status: 'scheduled',
+              leadId: lead._id
+            });
+          }
+
+          // Service information (if service field exists)
+          if (lead.service) {
+            activities.push({
+              id: `service_added_${lead._id}`,
+              type: 'service_added',
+              message: `Service "${lead.service}" added to "${lead.name}"`,
+              time: new Date(lead.updatedAt || lead.updated_at || Date.now()),
+              details: `Service: ${lead.service}`,
+              status: lead.status,
+              leadId: lead._id
+            });
+          }
         });
 
-        // Sort by time and take most recent 8 activities
+        // Add system activities
+        if (totalLeads > 0) {
+          activities.push({
+            id: 'system_stats',
+            type: 'system_update',
+            message: `Pipeline Overview`,
+            time: new Date(Date.now() - 1800000), // 30 minutes ago
+            details: `${totalLeads} total leads • ${activeLeads} active • ${totalLeads - activeLeads} completed`,
+            status: 'active'
+          });
+        }
+
+        // Sort by time and take most recent 10 activities (increased from 8)
         const allActivity = activities
           .sort((a, b) => new Date(b.time) - new Date(a.time))
-          .slice(0, 8);
+          .slice(0, 10);
 
         // If no activities found, add some fallback activities
         if (allActivity.length === 0) {
@@ -438,6 +598,36 @@ const Dashboard = () => {
             <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
           </svg>
         );
+      case 'lead_assigned':
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-3.7 3.7V22h8zm-8 0v-6h-3l3-3h.5c.28 0 .5.22.5.5V16h2.5V22h-3z"/>
+          </svg>
+        );
+      case 'notes_added':
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+          </svg>
+        );
+      case 'call_completed':
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99C3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+          </svg>
+        );
+      case 'followup_scheduled':
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+          </svg>
+        );
+      case 'service_added':
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        );
       case 'report_generated':
         return (
           <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
@@ -575,15 +765,19 @@ const Dashboard = () => {
           <div className="dashboard-card">
             <div className="card-header">
               <h3>Recent Activity</h3>
+              <div className="activity-filters">
+                <span className="activity-count">{recentActivity.length} activities</span>
+              </div>
             </div>
             <div className="activity-list">
               {recentActivity.length > 0 ? (
                 recentActivity.map((activity) => (
-                <div key={activity.id} className="activity-item">
-                  <div className="activity-icon">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="activity-content">
+                  <div key={activity.id} className="activity-item" 
+                       onClick={() => activity.leadId ? window.location.href = `/leads/${activity.leadId}` : null}>
+                    <div className="activity-icon">
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="activity-content">
                       <p className="activity-message">{activity.message}</p>
                       {activity.details && (
                         <p className="activity-details">{activity.details}</p>
@@ -599,6 +793,13 @@ const Dashboard = () => {
                         </span>
                       </div>
                     )}
+                    {activity.leadId && (
+                      <div className="activity-action">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                          <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
@@ -609,6 +810,17 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
+            {recentActivity.length > 0 && (
+              <div className="activity-footer">
+                <button 
+                  className="btn-text" 
+                  onClick={() => fetchDashboardData()}
+                  style={{ fontSize: '0.85rem', color: '#6b7280' }}
+                >
+                  Refresh Activity
+                </button>
+              </div>
+            )}
           </div>
 
 
