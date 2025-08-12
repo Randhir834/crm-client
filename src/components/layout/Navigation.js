@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../../styles/global.css';
 import './Navigation.css';
-import logoImage from '../../assets/logo.png';
 
 const Navigation = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -18,7 +17,6 @@ const Navigation = () => {
     return location.pathname === path;
   };
 
-  // Function to get the dynamic title based on current route
   const getPageTitle = () => {
     return 'Innovatiq Media CRM';
   };
@@ -28,12 +26,13 @@ const Navigation = () => {
       <div className="nav-left">
         <div className="nav-brand">
           <div className="brand-logo">
-            <img src={logoImage} alt="Innovatiq Media CRM" className="logo-image" />
+            {/* You can replace this with an SVG or styled text if needed */}
+            <div className="text-logo">IMCRM</div>
           </div>
-          <h1>{getPageTitle().replace(/^[^\w]*/,'')}</h1>
+          <h1>{getPageTitle().replace(/^[^\w]*/, '')}</h1>
         </div>
       </div>
-      
+
       <div className="nav-center">
         <div className="nav-menu">
           {isAdmin && (
@@ -86,11 +85,11 @@ const Navigation = () => {
       <div className="nav-right">
         <div className="user-menu">
           <div className="user-avatar">
-            <span>{user && user.name && user.name.charAt(0).toUpperCase()}</span>
+            <span>{user?.name?.charAt(0).toUpperCase()}</span>
           </div>
           <div className="user-info">
-            <span className="user-name">{user && user.name}</span>
-            <span className="user-role">{user && user.role ? user.role : 'User'}</span>
+            <span className="user-name">{user?.name}</span>
+            <span className="user-role">{user?.role || 'User'}</span>
           </div>
           <button onClick={handleLogout} className="logout-button">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -103,4 +102,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation; 
+export default Navigation;
