@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from './Layout';
-import { getApiUrl } from '../config/api';
-import './Dashboard.css';
+import Layout from '../../components/layout/Layout';
+import { LoadingSpinner } from '../../components/ui';
+import { getApiUrl } from '../../services/api';
+import '../../styles/global.css';
+import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -11,6 +13,8 @@ const AdminDashboard = () => {
     activeUsers: 0,
     totalLeads: 0
   });
+
+  const [onlineUsers, setOnlineUsers] = useState(0);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,8 +73,13 @@ const AdminDashboard = () => {
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-
-        setUsers(usersData.users || []);
+        const users = usersData.users || [];
+        
+        // Calculate actual online users count
+        const onlineCount = users.filter(user => user.sessions?.current).length;
+        setOnlineUsers(onlineCount);
+        
+        setUsers(users);
       } else {
         console.error('Failed to fetch users with sessions:', usersResponse.status);
       }
@@ -125,45 +134,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const fixAllUserRoles = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Fix each user's role
-      for (const user of users) {
-        if (!user.role || user.role === '') {
-          let newRole = 'user';
-          
-          // Make Innovatiqmedia admin
-          if (user.email === 'innovatiqmedia@gmail.com') {
-            newRole = 'admin';
-          }
-          
-          const response = await fetch(getApiUrl(`api/auth/users/${user._id}/role`), {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ role: newRole })
-          });
 
-          if (response.ok) {
-            console.log(`Fixed role for ${user.name}: ${newRole}`);
-          } else {
-            console.error(`Failed to fix role for ${user.name}`);
-          }
-        }
-      }
-      
-      // Refresh the data
-      await fetchAdminData();
-      alert('User roles have been fixed!');
-    } catch (error) {
-      console.error('Error fixing user roles:', error);
-      alert('Error fixing user roles. Please try again.');
-    }
-  };
 
   const formatDuration = (milliseconds) => {
     if (!milliseconds || milliseconds === 0) return '0m';
@@ -227,12 +198,7 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="dashboard-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading Admin Dashboard...</p>
-          </div>
-        </div>
+        <LoadingSpinner message="Loading Admin Dashboard..." />
       </Layout>
     );
   }
@@ -266,46 +232,46 @@ const AdminDashboard = () => {
             <h2>Admin Dashboard</h2>
             <p>System overview and user management for Innovatiq Media CRM</p>
           </div>
-          <div className="header-actions">
-            
-          </div>
         </div>
 
         {/* System Statistics */}
         <div className="stats-grid">
-          <div className="stat-card total-users">
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+              <svg viewBox="0 0 24 24" fill="white">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
               </svg>
             </div>
             <div className="stat-content">
               <h3>Total Users</h3>
-              <div className="stat-number">{stats.totalUsers}</div>
+              <p className="stat-number">{stats.totalUsers}</p>
+              <span className="stat-change positive">Users in the system</span>
             </div>
           </div>
 
-          <div className="stat-card active-users">
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+              <svg viewBox="0 0 24 24" fill="white">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
             </div>
             <div className="stat-content">
               <h3>Active Users</h3>
-              <div className="stat-number">{stats.activeUsers}</div>
+              <p className="stat-number">{onlineUsers}</p>
+              <span className="stat-change positive">Currently online</span>
             </div>
           </div>
 
-          <div className="stat-card total-leads">
-            <div className="stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+              <svg viewBox="0 0 24 24" fill="white">
                 <path d="M16 1H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
               </svg>
             </div>
             <div className="stat-content">
               <h3>Total Leads</h3>
-              <div className="stat-number">{stats.totalLeads}</div>
+              <p className="stat-number">{stats.totalLeads}</p>
+              <span className="stat-change positive">Leads in pipeline</span>
             </div>
           </div>
         </div>
@@ -316,20 +282,19 @@ const AdminDashboard = () => {
         <div className="content-section">
           <div className="section-header">
             <div className="section-title">
-              <h2>👥 User Management</h2>
+              <h3>User Management</h3>
               <p>Manage user roles and permissions • {users.length} total users</p>
             </div>
             <div className="section-actions">
               <button 
-                className="btn btn-primary"
+                className="import-button"
                 onClick={() => navigate('/register', { state: { fromAdmin: true } })}
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '16px', height: '16px', marginRight: '8px'}}>
+                <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V8c0-.55-.45-1-1-1s-1 .45-1 1v2H2c-.55 0-1 .45-1 1s.45 1 1 1h2v2c0 .55.45 1 1 1s1-.45 1-1v-2h2c.55 0 1-.45 1-1s-.45-1-1-1H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
                 Registration
               </button>
-
             </div>
           </div>
           
@@ -351,14 +316,14 @@ const AdminDashboard = () => {
                   {users.map((user) => (
                     <tr key={user._id}>
                       <td>
-                        <div className="user-name">
-                          <div className="user-avatar">
-                            {user.name.charAt(0).toUpperCase()}
+                        <div className="lead-name">
+                          <div className="lead-avatar">
+                            <span>{user.name.charAt(0).toUpperCase()}</span>
                           </div>
-                          {user.name}
+                          <span>{user.name}</span>
                         </div>
                       </td>
-                      <td className="user-email">{user.email}</td>
+                      <td>{user.email}</td>
                       <td>
                         <div className="activity-info">
                           <div className="activity-time">{formatDate(user.firstLoginTime)}</div>
@@ -385,24 +350,26 @@ const AdminDashboard = () => {
                         </div>
                       </td>
                       <td>
-                        <span className={`role-badge ${user.role || 'user'}`}>
+                        <span className={`assigned-badge ${user.role === 'admin' ? 'admin' : 'user'}`}>
                           {user.role === 'admin' ? 'Admin' : 'User'}
                         </span>
-                        <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '0.7rem' }}>
-                          Raw: {user.role || 'undefined'}
-                        </small>
                         {user.email === 'innovatiqmedia@gmail.com' && user.role !== 'admin' && (
                           <button 
-                            className="btn btn-primary"
+                            className="action-btn edit"
                             style={{ marginLeft: '8px', fontSize: '0.7rem', padding: '2px 6px' }}
                             onClick={() => updateUserRole(user._id, 'admin')}
+                            title="Make Admin"
                           >
-                            Make Admin
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
                           </button>
                         )}
                       </td>
                       <td>
-                        {getSessionStatus(user)}
+                        <span className={`uploaded-by-badge ${getSessionStatus(user).props.className.includes('online') ? 'online' : 'offline'}`}>
+                          {getSessionStatus(user).props.children[1]}
+                        </span>
                       </td>
                     </tr>
                   ))}

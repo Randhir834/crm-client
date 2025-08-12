@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { getApiUrl } from '../config/api';
-import './Auth.css';
-import logoImage from '../assets/logo.png';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { getApiUrl } from '../../services/api';
+import '../../styles/Auth.css';
+
 
 const Register = () => {
   const [formData, setFormData] = useState({

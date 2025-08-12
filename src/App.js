@@ -1,17 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import AdminDashboard from './components/AdminDashboard';
-import Leads from './components/Leads';
-import Call from './components/Call';
-import CallDone from './components/CallDone';
-import ProtectedRoute from './components/ProtectedRoute';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-import './App.css';
+import { Login, Register, ForgotPassword, ResetPassword } from './pages/auth';
+import { Dashboard, AdminDashboard } from './pages/dashboard';
+import { Leads } from './pages/leads';
+import { Call, CallDone, FollowUp } from './pages/call';
+import { ProtectedRoute } from './components/layout';
+import './styles/global.css';
 
 function App() {
   return (
@@ -63,6 +58,15 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/follow-up" 
+              element={
+                <ProtectedRoute>
+                  <FollowUp />
+                </ProtectedRoute>
+              } 
+            />
+
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>

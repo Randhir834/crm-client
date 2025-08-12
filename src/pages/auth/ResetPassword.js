@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { getApiUrl } from '../config/api';
-import './Auth.css';
+import { getApiUrl } from '../../services/api';
+import '../../styles/Auth.css';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();

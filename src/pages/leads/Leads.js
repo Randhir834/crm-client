@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Layout from './Layout';
-import { useAuth } from '../context/AuthContext';
-import { getApiUrl } from '../config/api';
-import './Dashboard.css';
+import Layout from '../../components/layout/Layout';
+import { useAuth } from '../../context/AuthContext';
+import { LoadingSpinner } from '../../components/ui';
+import { getApiUrl } from '../../services/api';
+import '../../styles/global.css';
+import './Leads.css';
 
 const Leads = () => {
   const { isAdmin, user } = useAuth();
@@ -397,22 +399,14 @@ const Leads = () => {
   if (initialLoad) {
     return (
       <Layout>
-        <div className="dashboard-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading leads...</p>
-          </div>
-        </div>
+        <LoadingSpinner message="Loading leads..." />
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="dashboard-container">
-
-
-
+      <div className="leads-container">
         
         <input
           type="file"
@@ -422,27 +416,20 @@ const Leads = () => {
           style={{ display: 'none' }}
         />
         
-        <div className="dashboard-header">
-          <div className="welcome-section">
-            <h1>Innovatiq Media Leads Management</h1>
+        <div className="page-header">
+          <div className="header-content">
+            <h2>Innovatiq Media Leads Management</h2>
             <p>Track, manage, and convert your leads into successful partnerships</p>
-          </div>
-          <div className="header-actions">
           </div>
         </div>
 
-
-
         <div className="content-section">
           <div className="section-header">
-                                <div className="section-title">
-              <h2>All Leads</h2>
+            <div className="section-title">
+              <h3>All Leads</h3>
               <p>
                 {`Showing ${filteredLeads.length} total leads (All uploaded leads displayed)`}
               </p>
-            </div>
-            <div className="section-filters">
-
             </div>
             <div className="section-actions">
               {isAdmin && (
@@ -477,13 +464,13 @@ const Leads = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Service</th>
-                    <th>Assigned To</th>
-                    <th>Uploaded By</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+                    <th>NAME</th>
+                    <th>PHONE</th>
+                    <th>SERVICE</th>
+                    <th>ASSIGNED TO</th>
+                    <th>UPLOADED BY</th>
+                    <th>CREATED</th>
+                    <th>ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -511,22 +498,22 @@ const Leads = () => {
                       </td>
                       <td>
                         {lead.assignedTo && (lead.assignedTo.name || lead.assignedTo._id) ? (
-                          <span className="uploaded-by assigned" title={`Assigned to ${lead.assignedTo.name || 'User'}`}>
+                          <span className="assigned-badge" title={`Assigned to ${lead.assignedTo.name || 'User'}`}>
                             {lead.assignedTo.name || 'User'}
                           </span>
                         ) : (
-                          <span className="uploaded-by unassigned" title="No user assigned">
+                          <span className="unassigned-badge" title="No user assigned">
                             Unassigned
                           </span>
                         )}
                       </td>
                       <td>
                         {lead.createdBy && (lead.createdBy.name || lead.createdBy._id) ? (
-                          <span className="uploaded-by">
+                          <span className="uploaded-by-badge">
                             {lead.createdBy.name || 'User'}
                           </span>
                         ) : (
-                          <span className="uploaded-by unknown" title="User information not available">
+                          <span className="uploaded-by-badge unknown" title="User information not available">
                             System
                           </span>
                         )}

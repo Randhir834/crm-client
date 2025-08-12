@@ -1,70 +1,150 @@
-# Getting Started with Create React App
+# CRM Client - React Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Project Structure
 
-## Available Scripts
+This React application follows a well-organized, scalable structure that separates concerns and makes the codebase maintainable.
 
-In the project directory, you can run:
+```
+src/
+├── components/           # Reusable UI components
+│   ├── common/          # Shared components (buttons, forms, etc.)
+│   ├── layout/          # Layout components
+│   │   ├── Navigation.js
+│   │   ├── Layout.js
+│   │   └── ProtectedRoute.js
+│   └── ui/              # UI-specific components
+├── pages/               # Page-level components
+│   ├── auth/            # Authentication pages
+│   │   ├── Login.js
+│   │   ├── Register.js
+│   │   ├── ForgotPassword.js
+│   │   └── ResetPassword.js
+│   ├── dashboard/       # Dashboard pages
+│   │   ├── Dashboard.js
+│   │   └── AdminDashboard.js
+│   └── leads/           # Leads management pages
+│       └── Leads.js
+├── hooks/               # Custom React hooks
+│   ├── useLocalStorage.js
+│   └── useApi.js
+├── utils/               # Utility functions
+│   └── index.js
+├── constants/           # App constants
+│   └── index.js
+├── styles/              # Global styles and CSS modules
+│   ├── App.css
+│   └── Auth.css
+├── services/            # API services
+│   └── api.js
+├── context/             # React context providers
+│   └── AuthContext.js
+└── assets/              # Static assets
+    └── logo.png
+```
 
-### `npm start`
+## Key Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Components Organization
+- **Layout Components**: Navigation, Layout wrapper, and route protection
+- **Page Components**: Organized by feature (auth, dashboard, leads)
+- **Common Components**: Reusable UI elements (to be added as needed)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Custom Hooks
+- **useLocalStorage**: Persistent state management
+- **useApi**: Centralized API calls with loading/error states
 
-### `npm test`
+### Utilities
+- **Date formatting**: Consistent date display across the app
+- **Validation**: Form validation helpers
+- **Storage**: Local storage utilities
+- **Error handling**: Centralized error management
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Constants
+- **API endpoints**: Centralized API route definitions
+- **App routes**: Frontend routing constants
+- **Validation rules**: Form validation constants
+- **Status enums**: Lead statuses and user roles
 
-### `npm run build`
+## Import Patterns
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Using Index Files
+```javascript
+// Instead of individual imports
+import Login from './pages/auth/Login';
+import Dashboard from './pages/dashboard/Dashboard';
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+// Use grouped imports
+import { Login, Register } from './pages/auth';
+import { Dashboard, AdminDashboard } from './pages/dashboard';
+import { Navigation, Layout } from './components/layout';
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Using Constants
+```javascript
+import { LEAD_STATUSES, USER_ROLES, API_ENDPOINTS } from './constants';
 
-### `npm run eject`
+// Use constants instead of magic strings
+const status = LEAD_STATUSES.QUALIFIED;
+const role = USER_ROLES.ADMIN;
+const endpoint = API_ENDPOINTS.LEADS.BASE;
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Using Utilities
+```javascript
+import { formatDate, validateEmail, debounce } from './utils';
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+// Consistent formatting and validation
+const formattedDate = formatDate(user.createdAt);
+const isValidEmail = validateEmail(email);
+const debouncedSearch = debounce(searchFunction, 300);
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Using Custom Hooks
+```javascript
+import { useLocalStorage, useApi } from './hooks';
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+// Persistent state and API management
+const [theme, setTheme] = useLocalStorage('theme', 'light');
+const { loading, error, apiCall } = useApi();
+```
 
-## Learn More
+## Benefits of This Structure
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. **Scalability**: Easy to add new features and pages
+2. **Maintainability**: Clear separation of concerns
+3. **Reusability**: Common utilities and hooks can be shared
+4. **Consistency**: Standardized patterns across the app
+5. **Testing**: Easier to test individual components and utilities
+6. **Team Development**: Multiple developers can work on different areas without conflicts
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Adding New Features
 
-### Code Splitting
+### New Page
+1. Create component in appropriate `pages/` subdirectory
+2. Add to corresponding index.js file
+3. Update routing in App.js
+4. Add navigation if needed
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### New Component
+1. Create in appropriate `components/` subdirectory
+2. Add to index.js if it's part of a group
+3. Import and use in pages
 
-### Analyzing the Bundle Size
+### New Utility
+1. Add to `utils/index.js` or create new utility file
+2. Export from `utils/index.js`
+3. Import and use throughout the app
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### New Hook
+1. Create in `hooks/` directory
+2. Add to `hooks/index.js`
+3. Import and use in components
 
-### Making a Progressive Web App
+## Best Practices
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. **Use index files** for clean imports
+2. **Follow naming conventions** (PascalCase for components, camelCase for functions)
+3. **Keep components focused** on single responsibility
+4. **Use constants** instead of magic strings
+5. **Leverage custom hooks** for reusable logic
+6. **Maintain consistent file structure** across similar components

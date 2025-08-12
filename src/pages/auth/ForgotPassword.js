@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { getApiUrl } from '../config/api';
-import './Auth.css';
-import logoImage from '../assets/logo.png';
+import { getApiUrl } from '../../services/api';
+import '../../styles/Auth.css';
+
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');

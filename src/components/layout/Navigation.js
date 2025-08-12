@@ -1,8 +1,9 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import '../../styles/global.css';
 import './Navigation.css';
-import logoImage from '../assets/logo.png';
+import logoImage from '../../assets/logo.png';
 
 const Navigation = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -66,6 +67,12 @@ const Navigation = () => {
             onClick={() => navigate('/call-done')}
           >
             Call Done
+          </button>
+          <button 
+            className={`nav-item ${isActive('/follow-up') ? 'active' : ''}`}
+            onClick={() => navigate('/follow-up')}
+          >
+            Follow Up
           </button>
         </div>
       </div>

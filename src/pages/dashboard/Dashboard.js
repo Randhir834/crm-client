@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import Layout from './Layout';
+import { useAuth } from '../../context/AuthContext';
+import Layout from '../../components/layout/Layout';
+import { LoadingSpinner } from '../../components/ui';
+import '../../styles/global.css';
 import './Dashboard.css';
 import axios from 'axios';
-import { getApiUrl } from '../config/api';
+import { getApiUrl } from '../../services/api';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -460,12 +462,7 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div className="dashboard-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading Dashboard...</p>
-          </div>
-        </div>
+        <LoadingSpinner message="Loading Dashboard..." />
       </Layout>
     );
   }
@@ -608,7 +605,7 @@ const Dashboard = () => {
                 <div className="empty-activity">
                   <div className="empty-icon">📊</div>
                   <p>No recent activity</p>
-                  <span>Activities will appear here as you work with your Innovatiq Media leads and calls</span>
+                  <span>Activities will appear here as you work with your Innovatiq Media leads</span>
                 </div>
               )}
             </div>
