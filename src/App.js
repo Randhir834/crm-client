@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { Login, Register, ForgotPassword, ResetPassword } from './pages/auth';
 import { Dashboard, AdminDashboard } from './pages/dashboard';
 import { Leads } from './pages/leads';
-import { Call, CallDone, FollowUp } from './pages/call';
+import { Call, CallDone, CallNotDone, FollowUp } from './pages/call';
 import { ProtectedRoute } from './components/layout';
 import './styles/global.css';
 
@@ -55,6 +55,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CallDone />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/call-not-done" 
+              element={
+                <ProtectedRoute>
+                  <CallNotDone />
                 </ProtectedRoute>
               } 
             />

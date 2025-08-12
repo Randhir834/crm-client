@@ -7,7 +7,7 @@ import '../../styles/global.css';
 import './call.css';
 
 const Call = () => {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -237,6 +237,11 @@ const Call = () => {
                     </div>
                   </div>
                   
+                  <div className="lead-assigned">
+                    <span className="label">👤 Assigned To:</span>
+                    <span className="value">{lead.assignedTo ? lead.assignedTo.name : 'Unassigned'}</span>
+                  </div>
+                  
                   <div className="lead-created">
                     <span className="label">📅 Created:</span>
                     <span className="value">{formatDate(lead.createdAt)}</span>
@@ -289,29 +294,30 @@ const Call = () => {
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem('token');
-                        const response = await fetch(getApiUrl(`api/leads/${lead._id}/complete-call`), {
-                          method: 'PUT',
+                        const response = await fetch(getApiUrl(`api/leads/${lead._id}/not-connected`), {
+                          method: 'PATCH',
                           headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                           },
                           body: JSON.stringify({
-                            callStatus: 'not_connected',
-                            completedAt: new Date().toISOString()
+                            notConnectedAt: new Date().toISOString()
                           })
                         });
 
                         if (response.ok) {
                           // Remove the lead from the current list
                           setLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
+                          // Force refresh to ensure proper state
+                          setTimeout(() => fetchLeads(), 100);
                           // Optionally show a success message
                           alert('Call marked as not connected!');
                         } else {
                           alert('Failed to mark call as not connected');
                         }
                       } catch (error) {
-                        console.error('Error completing call:', error);
-                        alert('Error completing call');
+                        console.error('Error marking call as not connected:', error);
+                        alert('Error marking call as not connected');
                       }
                     }}
                   >
@@ -320,82 +326,110 @@ const Call = () => {
                   <button 
                     className="action-button schedule-button"
                     onClick={() => {
-                      // Create a datetime-local input
-                      const input = document.createElement('input');
-                      input.type = 'datetime-local';
-                      input.min = new Date().toISOString().slice(0, 16); // Set min to current date/time
-                      
-                      // Style the input
-                      input.style.position = 'fixed';
-                      input.style.top = '50%';
-                      input.style.left = '50%';
-                      input.style.transform = 'translate(-50%, -50%)';
-                      input.style.zIndex = '9999';
-                      input.style.padding = '10px';
-                      input.style.fontSize = '16px';
-                      input.style.border = '2px solid #3b82f6';
-                      input.style.borderRadius = '8px';
-                      input.style.backgroundColor = 'white';
-                      input.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-                      
-                      // Add to DOM
-                      document.body.appendChild(input);
-                      input.focus();
-                      
-                      // Handle the date/time selection
-                      input.onchange = async (e) => {
-                        const selectedDateTime = e.target.value;
-                        if (selectedDateTime) {
-                          try {
-                            const token = localStorage.getItem('token');
-                            const response = await fetch(getApiUrl(`api/leads/${lead._id}/schedule`), {
-                              method: 'PATCH',
-                              headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                              },
-                              body: JSON.stringify({
-                                scheduledAt: new Date(selectedDateTime).toISOString()
-                              })
-                            });
-
-                            if (response.ok) {
-                              // Remove the lead from the current list
-                              setLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
-                              alert(`Call scheduled for ${new Date(selectedDateTime).toLocaleString()}!`);
-                            } else {
-                              alert('Failed to schedule call');
-                            }
-                          } catch (error) {
-                            console.error('Error scheduling call:', error);
-                            alert('Error scheduling call');
-                          }
-                        }
-                        
-                        // Remove the input from DOM
-                        document.body.removeChild(input);
-                      };
-                      
-                      // Handle escape key and click outside
-                      input.onblur = () => {
-                        setTimeout(() => {
-                          if (document.body.contains(input)) {
-                            document.body.removeChild(input);
-                          }
-                        }, 100);
-                      };
-                      
-                      // Handle escape key
-                      input.onkeydown = (e) => {
-                        if (e.key === 'Escape') {
-                          document.body.removeChild(input);
-                        }
-                      };
+                      // Toggle the schedule picker visibility
+                      setLeads(prevLeads => 
+                        prevLeads.map(l => 
+                          l._id === lead._id 
+                            ? { ...l, showSchedulePicker: !l.showSchedulePicker }
+                            : { ...l, showSchedulePicker: false }
+                        )
+                      );
                     }}
                   >
                     Schedule
                   </button>
                 </div>
+                
+                {/* Schedule Picker - shown inline when button is clicked */}
+                {lead.showSchedulePicker && (
+                  <div className="schedule-picker-container">
+                    <div className="schedule-picker-header">
+                      <span>📅 Schedule Call</span>
+                      <button 
+                        className="close-picker-btn"
+                        onClick={() => {
+                          setLeads(prevLeads => 
+                            prevLeads.map(l => 
+                              l._id === lead._id 
+                                ? { ...l, showSchedulePicker: false }
+                                : l
+                            )
+                          );
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="schedule-picker-content">
+                      <input
+                        type="datetime-local"
+                        className="schedule-datetime-input"
+                        min={new Date().toISOString().slice(0, 16)}
+                        onChange={(e) => {
+                          setLeads(prevLeads => 
+                            prevLeads.map(l => 
+                              l._id === lead._id 
+                                ? { ...l, tempScheduledAt: e.target.value }
+                                : l
+                            )
+                          );
+                        }}
+                      />
+                      <div className="schedule-actions">
+                        <button 
+                          className="confirm-schedule-btn"
+                          onClick={async () => {
+                            const scheduledAt = lead.tempScheduledAt;
+                            if (scheduledAt) {
+                              try {
+                                const token = localStorage.getItem('token');
+                                const response = await fetch(getApiUrl(`api/leads/${lead._id}/schedule`), {
+                                  method: 'PATCH',
+                                  headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                  },
+                                  body: JSON.stringify({
+                                    scheduledAt: new Date(scheduledAt).toISOString()
+                                  })
+                                });
+
+                                if (response.ok) {
+                                  // Remove the lead from the current list
+                                  setLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
+                                  alert(`Call scheduled for ${new Date(scheduledAt).toLocaleString()}!`);
+                                } else {
+                                  alert('Failed to schedule call');
+                                }
+                              } catch (error) {
+                                console.error('Error scheduling call:', error);
+                                alert('Error scheduling call');
+                              }
+                            } else {
+                              alert('Please select a date and time');
+                            }
+                          }}
+                        >
+                          Confirm Schedule
+                        </button>
+                        <button 
+                          className="cancel-schedule-btn"
+                          onClick={() => {
+                            setLeads(prevLeads => 
+                              prevLeads.map(l => 
+                                l._id === lead._id 
+                                  ? { ...l, showSchedulePicker: false, tempScheduledAt: null }
+                                  : l
+                              )
+                            );
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

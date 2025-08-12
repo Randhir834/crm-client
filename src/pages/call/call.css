@@ -404,6 +404,186 @@
   margin-top: var(--spacing-sm);
 }
 
+
+
+/* Scheduled Call Cards */
+.lead-card.scheduled-call {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #f59e0b;
+}
+
+.lead-card.scheduled-call::before {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.scheduled-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  white-space: nowrap;
+}
+
+.lead-scheduled {
+  background: #fef3c7;
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  margin-top: var(--spacing-sm);
+}
+
+.scheduled-time {
+  font-weight: 600;
+  color: #d97706;
+}
+
+/* Not Connected Call Cards */
+.lead-card.not-connected-call {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border-color: #ef4444;
+}
+
+.lead-card.not-connected-call::before {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.lead-not-connected {
+  background: #fef2f2;
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  margin-top: var(--spacing-sm);
+}
+
+.lead-follow-up {
+  background: #fef3c7;
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  margin-top: var(--spacing-sm);
+}
+
+.follow-up-time {
+  font-weight: 600;
+  color: #d97706;
+}
+
+.lead-not-connected-info {
+  background: #fef2f2;
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  margin-top: var(--spacing-sm);
+}
+
+/* Inline Schedule Picker */
+.schedule-picker-container {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  border-top: 3px solid #3b82f6;
+}
+
+.schedule-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.schedule-picker-header span {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.close-picker-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: 4px;
+  font-size: 1.2rem;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.close-picker-btn:hover {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.schedule-picker-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.schedule-datetime-input {
+  padding: var(--spacing-sm);
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: white;
+  color: #1e293b;
+  transition: border-color 0.2s ease;
+}
+
+.schedule-datetime-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.schedule-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.confirm-schedule-btn {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-schedule-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+}
+
+.cancel-schedule-btn {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-schedule-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
 /* Responsive Design */
 @media (min-width: 1400px) {
   .leads-grid {

@@ -6,20 +6,20 @@ import { getApiUrl } from '../../services/api';
 import '../../styles/global.css';
 import './call.css';
 
-const CallDone = () => {
+const CallNotDone = () => {
   const { user: authUser } = useAuth();
-  const [completedLeads, setCompletedLeads] = useState([]);
+  const [notConnectedLeads, setNotConnectedLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch completed calls from API
-  const fetchCompletedCalls = useCallback(async () => {
+  // Fetch not connected calls from API
+  const fetchNotConnectedCalls = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl('api/leads/completed-calls'), {
+      const response = await fetch(getApiUrl('api/leads/not-connected-calls'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -28,23 +28,23 @@ const CallDone = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const completedData = data.completedLeads || [];
-        setCompletedLeads(completedData);
+        const notConnectedData = data.notConnectedLeads || [];
+        setNotConnectedLeads(notConnectedData);
       } else {
-        setError('Failed to fetch completed calls');
-        console.error('Failed to fetch completed calls:', response.status, response.statusText);
+        setError('Failed to fetch not connected calls');
+        console.error('Failed to fetch not connected calls:', response.status, response.statusText);
       }
     } catch (error) {
-      setError('Error fetching completed calls');
-      console.error('Error fetching completed calls:', error);
+      setError('Error fetching not connected calls');
+      console.error('Error fetching not connected calls:', error);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchCompletedCalls();
-  }, [fetchCompletedCalls]);
+    fetchNotConnectedCalls();
+  }, [fetchNotConnectedCalls]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -55,10 +55,20 @@ const CallDone = () => {
     }
   };
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch {
+      return 'N/A';
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
-        <LoadingSpinner message="Loading completed calls..." />
+        <LoadingSpinner message="Loading not connected calls..." />
       </Layout>
     );
   }
@@ -68,12 +78,12 @@ const CallDone = () => {
       <Layout>
         <div className="call-page">
           <div className="call-header">
-            <h1>Call Done</h1>
-            <p>View your completed calls</p>
+            <h1>Call Not Done</h1>
+            <p>View your not connected calls</p>
           </div>
           <div className="error-container">
             <p className="error-message">{error}</p>
-            <button onClick={fetchCompletedCalls} className="retry-button">
+            <button onClick={fetchNotConnectedCalls} className="retry-button">
               Retry
             </button>
           </div>
@@ -87,25 +97,25 @@ const CallDone = () => {
       <div className="call-page">
         <div className="call-header">
           <div className="header-content">
-            <h1>Call Done</h1>
-            <p>View your completed calls</p>
+            <h1>Call Not Done</h1>
+            <p>View your not connected calls</p>
           </div>
           <div className="leads-count">
-            <span className="count-text">Completed Calls</span>
-            <span className="count-badge">{completedLeads.length}</span>
+            <span className="count-text">Not Connected Calls</span>
+            <span className="count-badge">{notConnectedLeads.length}</span>
           </div>
         </div>
 
-        {completedLeads.length === 0 ? (
+        {notConnectedLeads.length === 0 ? (
           <div className="no-leads">
-            <div className="no-leads-icon">✅</div>
-            <h3>No completed calls yet</h3>
-            <p>Complete some calls from the Call page to see them here</p>
+            <div className="no-leads-icon">❌</div>
+            <h3>No not connected calls yet</h3>
+            <p>Mark some calls as not connected from the Call page to see them here</p>
           </div>
         ) : (
           <div className="leads-grid">
-            {completedLeads.map((lead) => (
-              <div key={lead._id} className="lead-card completed-call">
+            {notConnectedLeads.map((lead) => (
+              <div key={lead._id} className="lead-card not-connected-call">
                 <div className="lead-header">
                   <div className="lead-name">{lead.name}</div>
                   <div className="header-right">
@@ -125,13 +135,16 @@ const CallDone = () => {
                                 callCompleted: false,
                                 callCompletedAt: null,
                                 callCompletedBy: null,
-                                scheduledAt: null
+                                scheduledAt: null,
+                                notConnectedAt: null
                               })
                             });
 
                             if (response.ok) {
-                              // Remove the lead from the completed list
-                              setCompletedLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
+                              // Remove the lead from the not connected list
+                              setNotConnectedLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
+                              // Force refresh to ensure proper state
+                              setTimeout(() => fetchNotConnectedCalls(), 100);
                               alert('Lead moved back to Call page successfully!');
                             } else {
                               alert('Failed to move lead back to Call page');
@@ -157,12 +170,10 @@ const CallDone = () => {
                     </div>
                   )}
                   
-                  {lead.notes && (
-                    <div className="lead-notes">
-                      <span className="label">📝 Service:</span>
-                      <span className="value">{lead.notes}</span>
-                    </div>
-                  )}
+                  <div className="lead-service">
+                    <span className="label">📝 Service:</span>
+                    <span className="value">{lead.notes || 'N/A'}</span>
+                  </div>
                   
                   <div className="lead-points">
                     <span className="label">⭐ Points:</span>
@@ -173,7 +184,7 @@ const CallDone = () => {
                         value={lead.points || ''}
                         onChange={(e) => {
                           // Update the local state immediately for responsive UI
-                          setCompletedLeads(prevLeads => 
+                          setNotConnectedLeads(prevLeads => 
                             prevLeads.map(l => 
                               l._id === lead._id 
                                 ? { ...l, points: e.target.value }
@@ -198,13 +209,13 @@ const CallDone = () => {
                             if (!response.ok) {
                               alert('Failed to save points');
                               // Revert the change if save failed
-                              fetchCompletedCalls();
+                              fetchNotConnectedCalls();
                             }
                           } catch (error) {
                             console.error('Error saving points:', error);
                             alert('Error saving points');
                             // Revert the change if save failed
-                            fetchCompletedCalls();
+                            fetchNotConnectedCalls();
                           }
                         }}
                       />
@@ -221,20 +232,16 @@ const CallDone = () => {
                     <span className="value">{formatDate(lead.createdAt)}</span>
                   </div>
                   
-                  <div className="lead-completed">
-                    <span className="label">✅ Completed:</span>
-                    <span className="value">{formatDate(lead.callCompletedAt)}</span>
+                  <div className="lead-not-connected">
+                    <span className="label">❌ Not Connected:</span>
+                    <span className="value">{formatDate(lead.notConnectedAt)}</span>
                   </div>
                   
-                  {lead.callHistory && lead.callHistory.length > 0 && (
-                    <div className="call-history">
-                      <span className="label">📋 Call Result:</span>
-                      <span className="value">{lead.callHistory[lead.callHistory.length - 1].status}</span>
-                    </div>
-                  )}
+                  <div className="lead-follow-up">
+                    <span className="label">📅 Follow-up Scheduled:</span>
+                    <span className="value follow-up-time">{formatDateTime(lead.scheduledAt)}</span>
+                  </div>
                 </div>
-                
-
               </div>
             ))}
           </div>
@@ -244,4 +251,4 @@ const CallDone = () => {
   );
 };
 
-export default CallDone; 
+export default CallNotDone; 

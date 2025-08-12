@@ -7,7 +7,7 @@ import '../../styles/global.css';
 import './call.css';
 
 const FollowUp = () => {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const [scheduledLeads, setScheduledLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,17 +65,6 @@ const FollowUp = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    const statusColors = {
-      'New': '#3B82F6',
-      'Qualified': '#10B981',
-      'Negotiation': '#F59E0B',
-      'Closed': '#059669',
-      'Lost': '#EF4444'
-    };
-    return statusColors[status] || '#6B7280';
-  };
-
   if (loading) {
     return (
       <Layout>
@@ -130,11 +119,8 @@ const FollowUp = () => {
                 <div className="lead-header">
                   <div className="lead-name">{lead.name}</div>
                   <div className="header-right">
-                    <div 
-                      className="lead-status"
-                      style={{ backgroundColor: getStatusColor(lead.status) }}
-                    >
-                      {lead.status}
+                    <div className="scheduled-badge">
+                      <span>📅 SCHEDULED</span>
                     </div>
                     <button 
                       className="delete-button"
@@ -236,6 +222,11 @@ const FollowUp = () => {
                     </div>
                   </div>
                   
+                  <div className="lead-assigned">
+                    <span className="label">👤 Assigned To:</span>
+                    <span className="value">{lead.assignedTo ? lead.assignedTo.name : 'Unassigned'}</span>
+                  </div>
+                  
                   <div className="lead-created">
                     <span className="label">📅 Created:</span>
                     <span className="value">{formatDate(lead.createdAt)}</span>
@@ -245,10 +236,13 @@ const FollowUp = () => {
                     <span className="label">📅 Scheduled For:</span>
                     <span className="value scheduled-time">{formatDateTime(lead.scheduledAt)}</span>
                   </div>
-                </div>
-                
-                <div className="scheduled-badge">
-                  <span>📅 Scheduled</span>
+                  
+                  {lead.notConnectedAt && (
+                    <div className="lead-not-connected-info">
+                      <span className="label">❌ Auto-scheduled from Not Connected:</span>
+                      <span className="value">{formatDate(lead.notConnectedAt)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

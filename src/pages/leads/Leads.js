@@ -40,8 +40,8 @@ const Leads = () => {
   const fetchLeads = useCallback(async (silent = false) => {
     try {
       const token = localStorage.getItem('token');
-      // Request ALL leads by setting a very high limit
-      const response = await fetch(getApiUrl('api/leads?limit=10000'), {
+      // Request ALL leads using the dedicated endpoint
+      const response = await fetch(getApiUrl('api/leads/all?limit=10000'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
