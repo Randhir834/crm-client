@@ -47,6 +47,44 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Auto logout when user closes or navigates away from website
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // This will trigger when user closes tab/window
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Send logout request before page unload
+        navigator.sendBeacon(`${API_BASE_URL}/api/auth/logout`, JSON.stringify({}));
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      // This will trigger when user switches tabs or minimizes browser
+      if (document.visibilityState === 'hidden') {
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Send logout request when page becomes hidden
+          navigator.sendBeacon(`${API_BASE_URL}/api/auth/logout`, JSON.stringify({}));
+          // Clear local storage and user state
+          localStorage.removeItem('token');
+          localStorage.removeItem('loginTime');
+          delete axios.defaults.headers.common['Authorization'];
+          setUser(null);
+        }
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const register = async (userData) => {
     try {
       setError(null);
