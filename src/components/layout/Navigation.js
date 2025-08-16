@@ -67,7 +67,7 @@ const Navigation = () => {
             className={`nav-item ${isActive('/call-done') ? 'active' : ''}`}
             onClick={() => navigate('/call-done')}
           >
-            Call Done
+            Hot Lead
           </button>
           <button 
             className={`nav-item ${isActive('/call-not-done') ? 'active' : ''}`}

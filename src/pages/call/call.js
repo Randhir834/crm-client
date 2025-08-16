@@ -301,7 +301,7 @@ const Call = () => {
                       }
                     }}
                   >
-                    Connect
+                    Hot Lead
                   </button>
                   <button 
                     className="action-button not-connected-button"
