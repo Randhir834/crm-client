@@ -679,7 +679,7 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-medium);
-  margin-bottom: 32px;
+  margin-bottom: 0; /* Remove large bottom margin */
 }
 
 .auth-button::before {
@@ -1314,6 +1314,12 @@ body {
     padding: 12px 18px;
     font-size: 16px;
     min-height: 44px;
+    margin-bottom: 0; /* Ensure no cutoff */
+  }
+  
+  /* Ensure button is always visible on small screens */
+  .login-form-container {
+    padding-bottom: 16px; /* Ensure button space */
   }
 }
  
@@ -1353,6 +1359,8 @@ body {
   padding: 40px;
   position: relative;
   z-index: 10;
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 .login-form-overlay {
@@ -1365,6 +1373,9 @@ body {
   box-shadow: none;
   border: none;
   animation: none;
+  min-height: 100%; /* Ensure full height */
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideInRight {
@@ -1439,7 +1450,22 @@ body {
 /* Login Form Container */
 .login-form-container {
   width: 100%;
-  margin-top: 250px;
+  margin-top: 200px;
+  padding-bottom: 40px; /* Ensure space for button */
+  min-height: calc(100vh - 200px); /* Ensure minimum height */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* For proper positioning */
+}
+
+/* Ensure the form takes full height and button is visible */
+.login-form-container .auth-form {
+  flex: 1; /* Take full height */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Space between form elements and button */
+  gap: 16px;
+  min-height: 0; /* Allow proper flex behavior */
 }
 
 /* Registration page specific spacing - scrollable */
@@ -1487,7 +1513,12 @@ body {
 }
 
 .form-group:last-of-type {
-  margin-bottom: 32px;
+  margin-bottom: 24px; /* Reduced from 32px to prevent overflow */
+}
+
+/* Ensure proper spacing for the forgot password link */
+.form-options {
+  margin-bottom: 16px; /* Add space before button */
 }
 
 /* Ensure proper spacing between form elements */
@@ -1496,12 +1527,25 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start; /* Align items to top */
+  gap: 16px; /* Consistent spacing between elements */
 }
 
 /* Make sure the button is visible at the bottom */
 .auth-button {
   margin-top: auto;
-  margin-bottom: 20px;
+  margin-bottom: 0; /* Remove bottom margin to prevent cutoff */
+  position: relative; /* Ensure proper positioning */
+}
+
+/* Ensure the button is always visible in login form */
+.auth-form .auth-button {
+  margin-top: auto; /* Push button to bottom */
+  margin-bottom: 0; /* No bottom margin to prevent cutoff */
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0; /* Prevent button from shrinking */
+  min-height: 48px; /* Ensure minimum button height */
 }
 
 /* Error text styling for registration */
@@ -1527,7 +1571,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 16px;
+  margin-top: 24px; /* Consistent spacing from form elements */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1537,6 +1581,8 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   width: 100%;
   backdrop-filter: blur(10px);
+  margin-bottom: 0; /* Ensure no bottom margin */
+  flex-shrink: 0; /* Prevent button from shrinking */
 }
 
 .auth-button::before {
@@ -1700,6 +1746,7 @@ body {
     height: 60vh;
     min-height: 400px;
     padding: 20px;
+    overflow-y: auto; /* Allow scrolling if needed */
   }
   
   .login-form-overlay {
@@ -1709,6 +1756,7 @@ body {
   
   .login-form-container {
     margin-top: 0;
+    padding-bottom: 20px; /* Ensure button space */
   }
   
   .brand-name-text {
@@ -1734,11 +1782,16 @@ body {
     height: 65vh;
     min-height: 350px;
     padding: 16px;
+    overflow-y: auto; /* Allow scrolling if needed */
   }
   
   .login-form-overlay {
     padding: 24px 20px;
     max-width: 100%;
+  }
+  
+  .login-form-container {
+    padding-bottom: 16px; /* Ensure button space */
   }
   
   .brand-name-text {
@@ -1770,6 +1823,7 @@ body {
   .auth-button {
     padding: 14px 20px;
     font-size: 16px;
+    margin-bottom: 0; /* Ensure no cutoff */
   }
 }
 
@@ -1788,10 +1842,15 @@ body {
     height: 70vh;
     min-height: 320px;
     padding: 12px;
+    overflow-y: auto; /* Allow scrolling if needed */
   }
   
   .login-form-overlay {
     padding: 20px 16px;
+  }
+  
+  .login-form-container {
+    padding-bottom: 12px; /* Ensure button space */
   }
   
   .brand-name-text {
@@ -1829,6 +1888,7 @@ body {
     padding: 12px 18px;
     font-size: 16px;
     border-radius: 8px;
+    margin-bottom: 0; /* Ensure no cutoff */
   }
   
   .error-message {
@@ -1992,13 +2052,40 @@ body {
 @media (max-width: 1200px) {
   .login-form-container {
     margin-top: 200px;
+    padding-bottom: 40px; /* Ensure button space */
   }
 }
 
 @media (max-width: 900px) {
   .login-form-container {
     margin-top: 0;
+    padding-bottom: 20px; /* Ensure button space */
   }
+}
+
+/* Additional button visibility improvements */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100%;
+  justify-content: space-between;
+  position: relative; /* For proper button positioning */
+}
+
+.auth-form .auth-button {
+  margin-top: auto; /* Push button to bottom */
+  margin-bottom: 0; /* Remove any bottom margin */
+  flex-shrink: 0; /* Prevent button from shrinking */
+  position: relative; /* Ensure proper positioning */
+}
+
+/* Button wrapper to ensure visibility */
+.button-wrapper {
+  margin-top: 24px;
+  padding-bottom: 16px;
+  position: relative;
+  z-index: 10;
 }
 
 /* Additional responsive improvements for ultra-wide screens */
@@ -2125,6 +2212,7 @@ body {
 @media (max-width: 360px) {
   .login-form-container {
     padding: 0 4px;
+    padding-bottom: 8px; /* Ensure button space */
   }
   
   .brand-header {
@@ -2144,6 +2232,7 @@ body {
     padding: 10px 14px;
     font-size: 15px;
     min-height: 42px;
+    margin-bottom: 0; /* Ensure no cutoff */
   }
   
   .error-message {
@@ -2161,6 +2250,100 @@ body {
   
   .password-help li {
     font-size: 10px;
+  }
+}
+
+/* Ensure button visibility on all screen sizes */
+.auth-button {
+  position: relative; /* Use relative positioning for better compatibility */
+  z-index: 100; /* Ensure button is above other elements */
+}
+
+/* Make button sticky on larger screens */
+@media (min-height: 700px) {
+  .auth-button {
+    position: sticky;
+    bottom: 0;
+  }
+}
+
+/* Additional safety measures for button visibility */
+@media (max-height: 600px) {
+  .login-form-container {
+    padding-bottom: 60px; /* Extra space for very short screens */
+  }
+  
+  .auth-button {
+    position: relative; /* Fallback for very short screens */
+    bottom: auto;
+  }
+}
+
+/* Ensure proper button spacing in all scenarios */
+.auth-form .auth-button:last-child {
+  margin-bottom: 0; /* Remove any bottom margin */
+  padding-bottom: 16px; /* Add padding instead */
+}
+
+/* Ensure button is always visible on very short screens */
+@media (max-height: 500px) {
+  .login-form-container {
+    padding-bottom: 80px; /* Even more space for very short screens */
+  }
+  
+  .login-right-side {
+    overflow-y: auto; /* Force scrolling on very short screens */
+  }
+  
+  .auth-button {
+    margin-top: 16px; /* Add some space above button */
+  }
+}
+
+/* Handle ultra-wide screens */
+@media (min-width: 1600px) {
+  .login-form-container {
+    margin-top: 150px; /* Reduce top margin on very wide screens */
+  }
+}
+
+/* Ensure button visibility on all screen sizes */
+@media (max-height: 700px) {
+  .login-form-container {
+    margin-top: 100px; /* Reduce top margin on shorter screens */
+    padding-bottom: 40px; /* Ensure button space */
+  }
+  
+  .auth-form {
+    gap: 12px; /* Reduce gap on shorter screens */
+  }
+  
+  .form-group {
+    margin-bottom: 16px; /* Reduce spacing on shorter screens */
+  }
+}
+
+/* Handle very short screens */
+@media (max-height: 600px) {
+  .login-form-container {
+    margin-top: 60px; /* Further reduce top margin */
+    padding-bottom: 60px; /* More space for button */
+  }
+  
+  .login-right-side {
+    overflow-y: auto; /* Force scrolling */
+  }
+  
+  .auth-form {
+    gap: 8px; /* Minimal spacing */
+  }
+  
+  .form-group {
+    margin-bottom: 12px; /* Minimal spacing */
+  }
+  
+  .brand-header {
+    margin-bottom: 16px; /* Reduce header spacing */
   }
 }
 
@@ -2209,5 +2392,26 @@ body {
     color: black !important;
     border: 1px solid #ccc;
   }
+}
+
+/* Final button visibility improvements */
+.auth-button {
+  /* Ensure button is always visible */
+  position: relative !important;
+  z-index: 1000 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 16px !important;
+}
+
+/* Ensure form container has proper spacing */
+.login-form-container {
+  overflow: visible !important;
+  padding-bottom: 20px !important;
+}
+
+/* Ensure right side allows scrolling if needed */
+.login-right-side {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
  
