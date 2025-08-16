@@ -34,11 +34,19 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #000; /* Fallback color */
 }
 
 /* Back button container */
@@ -864,6 +872,23 @@ body {
     align-items: flex-start;
     gap: 12px;
   }
+  
+  /* Additional mobile optimizations */
+  .form-group input {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 14px 16px;
+  }
+  
+  .auth-button {
+    padding: 14px 20px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  .password-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -889,6 +914,32 @@ body {
   .logo-icon svg {
     width: 28px;
     height: 28px;
+  }
+  
+  /* Mobile form optimizations */
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group input {
+    padding: 12px 14px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+  
+  .auth-button {
+    padding: 12px 16px;
+    font-size: 16px;
+    min-height: 44px;
+  }
+  
+  .error-message {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  
+  .password-help {
+    padding: 10px 12px;
   }
 }
 
@@ -1159,37 +1210,171 @@ body {
     padding: 24px 0;
   }
 }
+
+/* Enhanced mobile responsiveness for login container */
+@media (max-width: 900px) {
+  .login-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  
+  .login-left-side {
+    width: 100%;
+    height: 35vh;
+    min-height: 200px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+  }
+  
+  .login-right-side {
+    width: 100%;
+    height: 65vh;
+    min-height: 400px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .login-form-overlay {
+    width: 100%;
+    max-width: 400px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-form-container {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .brand-header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  
+  .brand-name-text {
+    font-size: 28px;
+  }
+  
+  .brand-subtitle {
+    font-size: 20px;
+  }
+  
+  .welcome-text {
+    font-size: 18px;
+  }
+}
+
+/* Additional mobile optimizations for very small screens */
+@media (max-width: 600px) {
+  .login-left-side {
+    height: 30vh;
+    min-height: 180px;
+    flex-shrink: 0;
+  }
+  
+  .login-right-side {
+    height: 70vh;
+    min-height: 380px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .login-form-overlay {
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-form-container {
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .brand-header {
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  
+  .brand-name-text {
+    font-size: 24px;
+  }
+  
+  .brand-subtitle {
+    font-size: 18px;
+  }
+  
+  .welcome-text {
+    font-size: 16px;
+  }
+  
+  .form-group {
+    margin-bottom: 18px;
+    width: 100%;
+  }
+  
+  .form-group input {
+    padding: 12px 16px;
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  .auth-button {
+    padding: 12px 18px;
+    font-size: 16px;
+    min-height: 44px;
+    width: 100%;
+  }
+}
  
 /* New Login Container Layout */
 .login-container {
   display: flex;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   overflow: hidden;
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   position: relative;
+  background-color: #000; /* Fallback color */
+  min-height: 100vh;
+  min-width: 100%;
 }
 
 /* Left Side - Empty Space */
 .login-left-side {
   width: 60%;
-  height: 100vh;
+  height: 100%;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 /* Right Side - Login Form Overlay */
 .login-right-side {
   width: 40%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px;
   position: relative;
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .login-form-overlay {
@@ -1202,6 +1387,10 @@ body {
   box-shadow: none;
   border: none;
   animation: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes slideInRight {
@@ -1276,7 +1465,12 @@ body {
 /* Login Form Container */
 .login-form-container {
   width: 100%;
-  margin-top: 250px;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Registration page specific spacing - scrollable */
@@ -1529,11 +1723,13 @@ body {
   .login-left-side {
     width: 100%;
     height: 40vh;
+    min-height: 250px;
   }
   
   .login-right-side {
     width: 100%;
     height: 60vh;
+    min-height: 400px;
     padding: 20px;
   }
   
@@ -1541,21 +1737,55 @@ body {
     padding: 32px 24px;
     max-width: 400px;
   }
+  
+  .login-form-container {
+    margin-top: 0;
+  }
+  
+  .brand-name-text {
+    font-size: 32px;
+  }
+  
+  .brand-subtitle {
+    font-size: 24px;
+  }
+  
+  .welcome-text {
+    font-size: 22px;
+  }
 }
 
 @media (max-width: 768px) {
   .login-left-side {
-    height: 30vh;
+    height: 35vh;
+    min-height: 200px;
+    flex-shrink: 0;
   }
   
   .login-right-side {
-    height: 70vh;
+    height: 65vh;
+    min-height: 350px;
     padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
   
   .login-form-overlay {
     padding: 24px 20px;
     max-width: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-form-container {
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .brand-header {
+    text-align: center;
   }
   
   .brand-name-text {
@@ -1570,12 +1800,60 @@ body {
     font-size: 20px;
   }
   
-  .login-title {
-    font-size: 24px;
+  .form-group {
+    width: 100%;
+  }
+  
+  .form-group input {
+    padding: 14px 18px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    width: 100%;
+  }
+  
+  .auth-button {
+    padding: 14px 20px;
+    font-size: 16px;
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
+  .login-container {
+    min-height: 100vh;
+    height: auto;
+  }
+  
+  .login-left-side {
+    height: 30vh;
+    min-height: 180px;
+    flex-shrink: 0;
+  }
+  
+  .login-right-side {
+    height: 70vh;
+    min-height: 320px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  
+  .login-form-overlay {
+    padding: 20px 16px;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .login-form-container {
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .brand-header {
+    text-align: center;
+  }
+  
   .brand-name-text {
     font-size: 24px;
   }
@@ -1588,12 +1866,493 @@ body {
     font-size: 18px;
   }
   
+  .form-group {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  
+  .form-group input {
+    padding: 12px 16px;
+    font-size: 16px;
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  .auth-button {
+    padding: 12px 18px;
+    font-size: 16px;
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  .error-message {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .password-help {
+    padding: 10px 14px;
+  }
+  
+  .password-help p {
+    font-size: 12px;
+  }
+  
+  .password-help li {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-left-side {
+    height: 25vh;
+    min-height: 150px;
+  }
+  
+  .login-right-side {
+    height: 75vh;
+    min-height: 300px;
+    padding: 10px;
+  }
+  
+  .login-form-overlay {
+    padding: 16px 12px;
+  }
+  
+  .brand-name-text {
+    font-size: 20px;
+  }
+  
+  .brand-subtitle {
+    font-size: 16px;
+  }
+  
+  .welcome-text {
+    font-size: 16px;
+  }
+  
   .login-title {
-    font-size: 22px;
+    font-size: 20px;
+    margin-top: 25px;
   }
   
   .login-subtitle {
+    font-size: 13px;
+  }
+  
+  .form-group input {
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+  
+  .auth-button {
+    padding: 10px 16px;
+    font-size: 15px;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-container {
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .login-left-side {
+    height: 25vh;
+    min-height: 120px;
+  }
+  
+  .login-right-side {
+    height: 75vh;
+    min-height: 280px;
+    padding: 16px;
+  }
+  
+  .login-form-container {
+    margin-top: 0;
+  }
+  
+  .brand-name-text {
+    font-size: 20px;
+  }
+  
+  .brand-subtitle {
+    font-size: 16px;
+  }
+  
+  .welcome-text {
+    font-size: 16px;
+  }
+  
+  .login-title {
+    font-size: 18px;
+    margin-top: 20px;
+  }
+  
+  .login-subtitle {
+    font-size: 12px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .form-group input {
+    border-width: 1px;
+  }
+  
+  .auth-button {
+    border-width: 1px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .form-group input {
+    min-height: 44px; /* iOS recommended touch target */
+  }
+  
+  .auth-button {
+    min-height: 44px;
+  }
+  
+  .password-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .forgot-password {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Additional touch optimizations */
+  .form-group label {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .error-text {
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Ensure proper form spacing on all devices */
+@media (max-width: 1200px) {
+  .login-form-container {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 900px) {
+  .login-form-container {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Ensure consistent form positioning across all devices */
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.form-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Additional responsive improvements for ultra-wide screens */
+@media (min-width: 1400px) {
+  .login-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .login-left-side {
+    width: 60%;
+  }
+  
+  .login-right-side {
+    width: 40%;
+  }
+}
+
+/* Ensure proper scaling on high-resolution displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .login-container {
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .form-group input {
+    border-width: 1px;
+  }
+  
+  .auth-button {
+    border-width: 1px;
+  }
+}
+
+/* Ensure background image covers full viewport on all devices */
+@media (max-width: 900px) {
+  .login-container {
+    background-attachment: scroll; /* Better mobile performance */
+    background-size: cover;
+    background-position: center;
+    background-color: #000; /* Fallback */
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    background-attachment: scroll;
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    background-color: #000; /* Fallback */
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+/* Additional cross-device compatibility */
+@media (max-width: 1024px) {
+  .login-container {
+    width: 100%;
+    min-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .login-left-side,
+  .login-right-side {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+/* Ensure consistent positioning across all screen sizes */
+@media (min-width: 1400px) {
+  .login-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Fix for ultra-wide screens */
+@media (min-width: 1920px) {
+  .login-container {
+    max-width: 1600px;
+  }
+}
+
+/* Ensure form elements are properly sized on all devices */
+.form-group label {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label-icon {
+  flex-shrink: 0;
+}
+
+.form-options {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.forgot-password {
+  width: 100%;
+  text-align: center;
+  display: block;
+}
+
+/* Additional background optimizations for mobile */
+@media (max-width: 768px) {
+  .login-container {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}
+
+/* Ensure background covers full screen on all orientations */
+@media (orientation: landscape) and (max-height: 500px) {
+  .login-container {
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+  }
+}
+
+/* Improve form readability on small screens */
+@media (max-width: 480px) {
+  .form-group label {
     font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .label-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .label-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .form-options {
+    margin-top: 6px;
+  }
+  
+  .forgot-password {
+    font-size: 13px;
+    text-align: center;
+    width: 100%;
+    padding: 8px 0;
+  }
+  
+  /* Ensure proper spacing on very small screens */
+  .login-form-container {
+    padding: 0 8px;
+  }
+  
+  .brand-header {
+    margin-bottom: 20px;
+  }
+  
+  .brand-name-text {
+    font-size: 22px;
+  }
+  
+  .brand-subtitle {
+    font-size: 16px;
+  }
+  
+  .welcome-text {
+    font-size: 15px;
+  }
+}
+
+/* Final responsive optimizations for all screen sizes */
+@media (max-width: 360px) {
+  .login-form-container {
+    padding: 0 4px;
+  }
+  
+  .brand-header {
+    margin-bottom: 16px;
+  }
+  
+  .form-group {
+    margin-bottom: 14px;
+  }
+  
+  .form-group input {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+  
+  .auth-button {
+    padding: 10px 14px;
+    font-size: 15px;
+    min-height: 42px;
+  }
+  
+  .error-message {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .password-help {
+    padding: 8px 10px;
+  }
+  
+  .password-help p {
+    font-size: 11px;
+  }
+  
+  .password-help li {
+    font-size: 10px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .auth-button::before,
+  .form-group input:focus,
+  .auth-button:hover {
+    animation: none;
+    transition: none;
+  }
+  
+  .error-message {
+    animation: none;
+  }
+  
+  .form-group input.shake {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .login-container {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .login-left-side {
+    display: none;
+  }
+  
+  .login-right-side {
+    width: 100%;
+    height: auto;
+    padding: 20px;
+  }
+  
+  .login-form-overlay {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .auth-button {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #ccc;
   }
 }
  
