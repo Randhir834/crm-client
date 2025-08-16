@@ -480,13 +480,13 @@ body {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .form-group label {
@@ -601,7 +601,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
+  margin-top: 2px;
 }
 
 .remember-me {
@@ -651,7 +651,7 @@ body {
   font-weight: 500;
   text-align: center;
   display: block;
-  margin-top: 16px;
+  margin-top: 4px;
   transition: color 0.3s ease;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
@@ -1381,7 +1381,7 @@ body {
 /* Brand Header Styles */
 .brand-header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 20px;
 }
 
   .welcome-text {
@@ -1439,7 +1439,7 @@ body {
 /* Login Form Container */
 .login-form-container {
   width: 100%;
-  margin-top: 250px;
+  margin-top: 150px;
 }
 
 /* Registration page specific spacing - scrollable */
@@ -1483,11 +1483,11 @@ body {
 
 /* Form group spacing for registration */
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .form-group:last-of-type {
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 /* Ensure proper spacing between form elements */
@@ -1527,7 +1527,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 16px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1621,7 +1621,7 @@ body {
   font-weight: 600;
   color: #1a1a1a;
   font-size: 14px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
 }
 
