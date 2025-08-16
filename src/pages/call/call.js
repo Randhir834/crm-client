@@ -124,7 +124,7 @@ const Call = () => {
 
         {leads.length === 0 ? (
           <div className="no-leads">
-            <div className="no-leads-icon">📞</div>
+            <div className="no-leads-icon"></div>
             <h3>No leads available</h3>
             <p>Upload leads from the Leads page to get started</p>
           </div>
@@ -178,7 +178,7 @@ const Call = () => {
                 <div className="lead-details">
                   {lead.phone && (
                     <div className="lead-phone">
-                      <span className="label">📞 Phone:</span>
+                      <span className="label">Phone:</span>
                       <span className="value">{lead.phone}</span>
                     </div>
                   )}
@@ -257,6 +257,20 @@ const Call = () => {
                 
                 <div className="lead-actions">
                   <button 
+                    className="action-button dial-button"
+                    onClick={() => {
+                      // Handle dial button click
+                      if (lead.phone) {
+                        window.open(`tel:${lead.phone}`, '_self');
+                      } else {
+                        alert('No phone number available for this lead');
+                      }
+                    }}
+                    title="Call this lead"
+                  >
+                    Dial
+                  </button>
+                  <button 
                     className="action-button connected-button"
                     onClick={async () => {
                       try {
@@ -287,7 +301,7 @@ const Call = () => {
                       }
                     }}
                   >
-                    Connected
+                    Connect
                   </button>
                   <button 
                     className="action-button not-connected-button"
@@ -321,7 +335,7 @@ const Call = () => {
                       }
                     }}
                   >
-                    Not Connected
+                    Not Connect
                   </button>
                   <button 
                     className="action-button schedule-button"

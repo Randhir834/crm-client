@@ -15,26 +15,37 @@ const Leads = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
 
-
   const [filteredLeads, setFilteredLeads] = useState([]);
 
-
+  // New state for user filter
+  const [selectedUserFilter, setSelectedUserFilter] = useState('');
+  const [users, setUsers] = useState([]);
 
   const fileInputRef = useRef(null);
   
   // New state for user selection modal
   const [showUserSelectionModal, setShowUserSelectionModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [users, setUsers] = useState([]);
-
-
-
 
   // Memoized function to update filtered leads
   const updateFilteredLeads = useCallback((leadsData) => {
-    // Show all leads (no filtering)
-    setFilteredLeads(leadsData);
-  }, []);
+    if (selectedUserFilter) {
+      // Filter leads by selected user
+      const filtered = leadsData.filter(lead => 
+        lead.assignedTo && 
+        (lead.assignedTo._id === selectedUserFilter || lead.assignedTo === selectedUserFilter)
+      );
+      setFilteredLeads(filtered);
+    } else {
+      // Show all leads (no filtering)
+      setFilteredLeads(leadsData);
+    }
+  }, [selectedUserFilter]);
+
+  // Effect to update filtered leads when filter changes
+  useEffect(() => {
+    updateFilteredLeads(leads);
+  }, [selectedUserFilter, leads, updateFilteredLeads]);
 
   // Fetch leads from API
   const fetchLeads = useCallback(async (silent = false) => {
@@ -102,13 +113,18 @@ const Leads = () => {
     const initializeLeads = async () => {
       await fetchLeads();
       
-              // Ensure all leads are properly displayed on initial load
-        if (leads.length > 0) {
-          updateFilteredLeads(leads);
-        }
+      // Ensure all leads are properly displayed on initial load
+      if (leads.length > 0) {
+        updateFilteredLeads(leads);
+      }
     };
     
     initializeLeads();
+    
+    // Fetch users for the filter dropdown
+    if (isAdmin) {
+      fetchUsers();
+    }
     
     // Listen for lead deletion events from other components
     const handleLeadDeleted = (event) => {
@@ -120,8 +136,6 @@ const Leads = () => {
       fetchLeads(true);
     };
     
-
-    
     window.addEventListener('leadDeleted', handleLeadDeleted);
     window.addEventListener('leadsImported', handleLeadsImported);
     
@@ -129,16 +143,7 @@ const Leads = () => {
       window.removeEventListener('leadDeleted', handleLeadDeleted);
       window.removeEventListener('leadsImported', handleLeadsImported);
     };
-  }, [fetchLeads, leads, updateFilteredLeads]);
-
-  // Effect to update filtered leads when leads change
-  useEffect(() => {
-    if (leads.length > 0) {
-      updateFilteredLeads(leads);
-    } else if (leads.length === 0) {
-      setFilteredLeads([]);
-    }
-  }, [leads, updateFilteredLeads]);
+  }, [fetchLeads, leads, updateFilteredLeads, isAdmin]);
 
   const handleImport = () => {
     if (isAdmin) {
@@ -428,10 +433,29 @@ const Leads = () => {
             <div className="section-title">
               <h3>All Leads</h3>
               <p>
-                {`Showing ${filteredLeads.length} total leads (All uploaded leads displayed)`}
+                {selectedUserFilter 
+                  ? `Showing ${filteredLeads.length} leads assigned to ${users.find(u => u._id === selectedUserFilter)?.name || 'selected user'}`
+                  : `Showing ${filteredLeads.length} total leads (All uploaded leads displayed)`
+                }
               </p>
             </div>
             <div className="section-actions">
+              {/* User Filter Dropdown */}
+              <div className="user-filter-container">
+                <select
+                  className="user-filter-select"
+                  value={selectedUserFilter}
+                  onChange={(e) => setSelectedUserFilter(e.target.value)}
+                >
+                  <option value="">All Users</option>
+                  {users.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
               {isAdmin && (
                 <button 
                   className={`import-button ${uploading ? 'uploading' : ''}`}
