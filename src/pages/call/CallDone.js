@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/layout/Layout';
-import { useAuth } from '../../context/AuthContext';
+
 import { LoadingSpinner } from '../../components/ui';
 import { getApiUrl } from '../../services/api';
 import '../../styles/global.css';
 import './call.css';
 
 const CallDone = () => {
-  const { user: authUser } = useAuth();
+
   const [completedLeads, setCompletedLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
 
   // Fetch completed calls from API
   const fetchCompletedCalls = useCallback(async () => {
@@ -46,6 +48,8 @@ const CallDone = () => {
     fetchCompletedCalls();
   }, [fetchCompletedCalls]);
 
+
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -58,7 +62,7 @@ const CallDone = () => {
   if (loading) {
     return (
       <Layout>
-        <LoadingSpinner message="Loading completed calls..." />
+        <LoadingSpinner message="Loading hot leads..." />
       </Layout>
     );
   }
@@ -68,7 +72,7 @@ const CallDone = () => {
       <Layout>
         <div className="call-page">
           <div className="call-header">
-            <h1>Call Done</h1>
+            <h1>Hot Lead</h1>
             <p>View your completed calls</p>
           </div>
           <div className="error-container">
@@ -87,12 +91,14 @@ const CallDone = () => {
       <div className="call-page">
         <div className="call-header">
           <div className="header-content">
-            <h1>Call Done</h1>
-            <p>View your completed calls</p>
+            <h1>Hot Lead</h1>
+            <p>View your Hot leads</p>
           </div>
-          <div className="leads-count">
-            <span className="count-text">Completed Calls</span>
-            <span className="count-badge">{completedLeads.length}</span>
+          <div className="header-controls">
+            <div className="leads-count">
+              <span className="count-text">Completed Calls</span>
+              <span className="count-badge">{completedLeads.length}</span>
+            </div>
           </div>
         </div>
 

@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/layout/Layout';
-import { useAuth } from '../../context/AuthContext';
+
 import { LoadingSpinner } from '../../components/ui';
 import { getApiUrl } from '../../services/api';
 import '../../styles/global.css';
 import './call.css';
 
 const FollowUp = () => {
-  const { user: authUser } = useAuth();
+
   const [scheduledLeads, setScheduledLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
 
   // Fetch scheduled calls from API
   const fetchScheduledCalls = useCallback(async () => {
@@ -45,6 +47,8 @@ const FollowUp = () => {
   useEffect(() => {
     fetchScheduledCalls();
   }, [fetchScheduledCalls]);
+
+
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -100,9 +104,11 @@ const FollowUp = () => {
             <h1>Follow Up</h1>
             <p>View your scheduled calls</p>
           </div>
-          <div className="leads-count">
-            <span className="count-text">Scheduled Calls</span>
-            <span className="count-badge">{scheduledLeads.length}</span>
+          <div className="header-controls">
+            <div className="leads-count">
+              <span className="count-text">Scheduled Calls</span>
+              <span className="count-badge">{scheduledLeads.length}</span>
+            </div>
           </div>
         </div>
 

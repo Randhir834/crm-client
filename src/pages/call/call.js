@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/layout/Layout';
-import { useAuth } from '../../context/AuthContext';
+
 import { LoadingSpinner } from '../../components/ui';
 import { getApiUrl } from '../../services/api';
 import '../../styles/global.css';
 import './call.css';
 
 const Call = () => {
-  const { user: authUser } = useAuth();
+
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
 
   // Fetch leads from API
   const fetchLeads = useCallback(async () => {
@@ -45,6 +47,8 @@ const Call = () => {
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
+
+
 
   // Listen for lead updates from other components
   useEffect(() => {
@@ -114,11 +118,13 @@ const Call = () => {
         <div className="call-header">
           <div className="header-content">
             <h1>Call Management</h1>
-            <p>Manage your leads and make calls</p>
+            <p>Manage your leads, make calls, and view completed calls</p>
           </div>
-          <div className="leads-count">
-            <span className="count-text">Total Calls</span>
-            <span className="count-badge">{leads.length}</span>
+          <div className="header-controls">
+            <div className="leads-count">
+              <span className="count-text">Total Calls</span>
+              <span className="count-badge">{leads.length}</span>
+            </div>
           </div>
         </div>
 
@@ -126,14 +132,16 @@ const Call = () => {
           <div className="no-leads">
             <div className="no-leads-icon"></div>
             <h3>No leads available</h3>
-            <p>Upload leads from the Leads page to get started</p>
+            <p>Upload leads from the Leads page to get started, or complete some calls to see them here</p>
           </div>
         ) : (
           <div className="leads-grid">
             {leads.map((lead) => (
               <div key={lead._id} className="lead-card">
                 <div className="lead-header">
-                  <div className="lead-name">{lead.name}</div>
+                  <div className="lead-name">
+                    {lead.name}
+                  </div>
                   <div className="header-right">
                     <div 
                       className="lead-status"
@@ -288,9 +296,20 @@ const Call = () => {
                         });
 
                         if (response.ok) {
-                          // Remove the lead from the current list
-                          setLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
-                          // Optionally show a success message
+                          // Update the lead in the current list to show it as completed
+                          setLeads(prevLeads => 
+                            prevLeads.map(l => 
+                              l._id === lead._id 
+                                ? { 
+                                    ...l, 
+                                    callCompleted: true, 
+                                    callCompletedAt: new Date().toISOString(),
+                                    callCompletedBy: l.assignedTo?._id || l.createdBy?._id
+                                  }
+                                : l
+                            )
+                          );
+                          // Show success message
                           alert('Call marked as completed!');
                         } else {
                           alert('Failed to mark call as completed');
@@ -320,11 +339,15 @@ const Call = () => {
                         });
 
                         if (response.ok) {
-                          // Remove the lead from the current list
-                          setLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
-                          // Force refresh to ensure proper state
-                          setTimeout(() => fetchLeads(), 100);
-                          // Optionally show a success message
+                          // Update the lead in the current list to show it as not connected
+                          setLeads(prevLeads => 
+                            prevLeads.map(l => 
+                              l._id === lead._id 
+                                ? { ...l, notConnectedAt: new Date().toISOString() }
+                                : l
+                            )
+                          );
+                          // Show success message
                           alert('Call marked as not connected!');
                         } else {
                           alert('Failed to mark call as not connected');
@@ -409,8 +432,14 @@ const Call = () => {
                                 });
 
                                 if (response.ok) {
-                                  // Remove the lead from the current list
-                                  setLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
+                                  // Update the lead in the current list to show it as scheduled
+                                  setLeads(prevLeads => 
+                                    prevLeads.map(l => 
+                                      l._id === lead._id 
+                                        ? { ...l, scheduledAt: new Date(scheduledAt).toISOString() }
+                                        : l
+                                    )
+                                  );
                                   alert(`Call scheduled for ${new Date(scheduledAt).toLocaleString()}!`);
                                 } else {
                                   alert('Failed to schedule call');

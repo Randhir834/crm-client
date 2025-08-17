@@ -39,6 +39,150 @@
   font-weight: 400;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  align-self: flex-start;
+}
+
+/* User Filter - Same design as Leads page */
+.user-filter-container {
+  display: flex;
+  align-items: center;
+  margin-right: var(--spacing-md);
+  position: relative;
+}
+
+.user-filter-container::before {
+  content: "👤";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.user-filter-select {
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md) 40px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffffff, #fafafa);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 200px;
+  color: #1f2937;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.user-filter-select:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15), 0 8px 25px -8px rgba(139, 92, 246, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+
+.user-filter-select:hover {
+  border-color: #8b5cf6;
+  box-shadow: 0 8px 25px -8px rgba(139, 92, 246, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+
+.user-filter-select:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.user-filter-select option {
+  padding: var(--spacing-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: white;
+  color: #1f2937;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.user-filter-select option:hover {
+  background: #f8fafc;
+}
+
+.user-filter-select option:checked {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+}
+
+/* Enhanced dropdown animation */
+.user-filter-select:focus option {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar for dropdown */
+.user-filter-select::-webkit-scrollbar {
+  width: 8px;
+}
+
+.user-filter-select::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.user-filter-select::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.user-filter-select::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.clear-filter-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: var(--spacing-xs);
+}
+
+.clear-filter-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.clear-filter-btn:active {
+  transform: scale(0.95);
+}
+
 .leads-count {
   display: flex;
   flex-direction: row;
@@ -67,6 +211,35 @@
   color: #8b5cf6;
   margin: 0;
   line-height: 1;
+}
+
+.filter-indicator {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-left: var(--spacing-xs);
+  font-weight: 400;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .header-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+  
+  .user-filter-container {
+    margin-right: 0;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .user-filter-select {
+    min-width: 100%;
+  }
+  
+  .leads-count {
+    align-self: center;
+  }
 }
 
 .leads-info-box {

@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../../components/layout/Layout';
-import { useAuth } from '../../context/AuthContext';
+
 import { LoadingSpinner } from '../../components/ui';
 import { getApiUrl } from '../../services/api';
 import '../../styles/global.css';
 import './call.css';
 
 const CallNotDone = () => {
-  const { user: authUser } = useAuth();
+
   const [notConnectedLeads, setNotConnectedLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
 
   // Fetch not connected calls from API
   const fetchNotConnectedCalls = useCallback(async () => {
@@ -45,6 +47,8 @@ const CallNotDone = () => {
   useEffect(() => {
     fetchNotConnectedCalls();
   }, [fetchNotConnectedCalls]);
+
+
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -100,9 +104,11 @@ const CallNotDone = () => {
             <h1>Call Not Done</h1>
             <p>View your not connected calls</p>
           </div>
-          <div className="leads-count">
-            <span className="count-text">Not Connected Calls</span>
-            <span className="count-badge">{notConnectedLeads.length}</span>
+          <div className="header-controls">
+            <div className="leads-count">
+              <span className="count-text">Not Connected Calls</span>
+              <span className="count-badge">{notConnectedLeads.length}</span>
+            </div>
           </div>
         </div>
 
