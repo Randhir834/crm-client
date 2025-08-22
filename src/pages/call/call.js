@@ -339,16 +339,14 @@ const Call = () => {
                         });
 
                         if (response.ok) {
-                          // Update the lead in the current list to show it as not connected
-                          setLeads(prevLeads => 
-                            prevLeads.map(l => 
-                              l._id === lead._id 
-                                ? { ...l, notConnectedAt: new Date().toISOString() }
-                                : l
-                            )
-                          );
+                          // Move the lead to the end of the queue after marking as not connected
+                          setLeads(prevLeads => {
+                            const updatedLead = { ...lead, notConnectedAt: new Date().toISOString() };
+                            const otherLeads = prevLeads.filter(l => l._id !== lead._id);
+                            return [...otherLeads, updatedLead];
+                          });
                           // Show success message
-                          alert('Call marked as not connected!');
+                          alert('Call marked as not connected and moved to end of queue!');
                         } else {
                           alert('Failed to mark call as not connected');
                         }
