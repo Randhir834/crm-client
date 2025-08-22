@@ -134,6 +134,55 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteUser = async (userId, userName) => {
+    // Confirm deletion with user
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete user "${userName}"?\n\nThis action will:\n• Permanently delete the user account\n• Delete all associated sessions\n• Delete all leads created by this user\n• Remove user assignments from leads\n\nThis action cannot be undone.`
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl(`api/auth/users/${userId}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Remove user from local state
+        setUsers(prevUsers => prevUsers.filter(user => user._id !== userId));
+        
+        // Update stats
+        setStats(prevStats => ({
+          ...prevStats,
+          totalUsers: prevStats.totalUsers - 1
+        }));
+        
+        // Update online users count if the deleted user was online
+        const deletedUser = users.find(user => user._id === userId);
+        if (deletedUser?.sessions?.current) {
+          setOnlineUsers(prev => prev - 1);
+        }
+        
+        console.log(`Successfully deleted user: ${userName}`);
+        alert(`User "${userName}" has been permanently deleted.`);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to delete user:', response.status, errorData);
+        alert(`Failed to delete user: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error deleting user. Please try again.');
+    }
+  };
+
 
 
   const formatDuration = (milliseconds) => {
@@ -310,6 +359,7 @@ const AdminDashboard = () => {
                     <th>Daily Usage</th>
                     <th>Role</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -350,26 +400,42 @@ const AdminDashboard = () => {
                         </div>
                       </td>
                       <td>
-                        <span className={`assigned-badge ${user.role === 'admin' ? 'admin' : 'user'}`}>
-                          {user.role === 'admin' ? 'Admin' : 'User'}
-                        </span>
-                        {user.email === 'innovatiqmedia@gmail.com' && user.role !== 'admin' && (
-                          <button 
-                            className="action-btn edit"
-                            style={{ marginLeft: '8px', fontSize: '0.7rem', padding: '2px 6px' }}
-                            onClick={() => updateUserRole(user._id, 'admin')}
-                            title="Make Admin"
-                          >
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                          </button>
-                        )}
+                        <div className="role-actions">
+                          <span className={`assigned-badge ${user.role === 'admin' ? 'admin' : 'user'}`}>
+                            {user.role === 'admin' ? 'Admin' : 'User'}
+                          </span>
+                          {user.email === 'innovatiqmedia@gmail.com' && user.role !== 'admin' && (
+                            <button 
+                              className="action-btn edit"
+                              style={{ marginLeft: '8px', fontSize: '0.7rem', padding: '2px 6px' }}
+                              onClick={() => updateUserRole(user._id, 'admin')}
+                              title="Make Admin"
+                            >
+                              <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td>
                         <span className={`uploaded-by-badge ${getSessionStatus(user).props.className.includes('online') ? 'online' : 'offline'}`}>
                           {getSessionStatus(user).props.children[1]}
                         </span>
+                      </td>
+                      <td>
+                        <div className="user-actions">
+                          <button 
+                            className="action-btn delete"
+                            onClick={() => handleDeleteUser(user._id, user.name)}
+                            title="Delete User"
+                            disabled={user.email === 'innovatiqmedia@gmail.com'}
+                          >
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
