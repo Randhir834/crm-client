@@ -203,6 +203,8 @@
   text-decoration: none;
 }
 
+
+
 .leads-count {
   display: flex;
   flex-direction: row;
@@ -261,6 +263,7 @@
     align-self: center;
   }
   
+
 
 }
 

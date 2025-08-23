@@ -41,16 +41,19 @@ const Call = () => {
 
   // Memoized function to update filtered leads
   const updateFilteredLeads = useCallback((leadsData) => {
+    // First, filter out scheduled calls (they should not appear in the call queue)
+    const unscheduledLeads = leadsData.filter(lead => !lead.scheduledAt);
+    
     if (selectedUserFilter) {
-      // Filter leads by selected user
-      const filtered = leadsData.filter(lead => 
+      // Filter unscheduled leads by selected user
+      const filtered = unscheduledLeads.filter(lead => 
         lead.assignedTo && 
         (lead.assignedTo._id === selectedUserFilter || lead.assignedTo === selectedUserFilter)
       );
       setFilteredLeads(filtered);
     } else {
-      // Show all leads (no filtering)
-      setFilteredLeads(leadsData);
+      // Show all unscheduled leads (no user filtering)
+      setFilteredLeads(unscheduledLeads);
     }
   }, [selectedUserFilter]);
 
@@ -184,9 +187,9 @@ const Call = () => {
               </select>
             </div>
             <div className="leads-count">
-              <span className="count-text">Total Calls</span>
+              <span className="count-text">Available Calls</span>
               <span className="count-badge">
-                {selectedUserFilter ? `${filteredLeads.length}/${leads.length}` : leads.length}
+                {selectedUserFilter ? `${filteredLeads.length}/${leads.filter(lead => !lead.scheduledAt).length}` : leads.filter(lead => !lead.scheduledAt).length}
               </span>
             </div>
           </div>
@@ -194,24 +197,26 @@ const Call = () => {
 
 
 
+
+
         {filteredLeads.length === 0 ? (
           <div className="no-leads">
             <div className="no-leads-icon"></div>
-            <h3>{selectedUserFilter ? 'No leads found for selected user' : 'No leads available'}</h3>
+            <h3>{selectedUserFilter ? 'No available calls for selected user' : 'No available calls'}</h3>
             <p>
               {selectedUserFilter ? (
                 <>
-                  No leads found for <strong>{users.find(u => u._id === selectedUserFilter)?.name || 'selected user'}</strong>.
+                  No available calls found for <strong>{users.find(u => u._id === selectedUserFilter)?.name || 'selected user'}</strong>.
                   <br />
                   <button 
                     className="clear-filter-link"
                     onClick={() => setSelectedUserFilter('')}
                   >
-                    Clear filter to see all leads
+                    Clear filter to see all available calls
                   </button>
                 </>
               ) : (
-                'Upload leads from the Leads page to get started, or complete some calls to see them here'
+                'All leads have been scheduled or completed. Upload new leads from the Leads page to get started.'
               )}
             </p>
           </div>
@@ -556,22 +561,18 @@ const Call = () => {
                                 });
 
                                 if (response.ok) {
-                                  // Update the lead in both lists to show it as scheduled
+                                  // Update the lead in the leads list to show it as scheduled
                                   const updatedLead = { ...lead, scheduledAt: new Date(scheduledAt).toISOString() };
-                                  setLeads(prevLeads => 
-                                    prevLeads.map(l => 
+                                  setLeads(prevLeads => {
+                                    const newLeads = prevLeads.map(l => 
                                       l._id === lead._id 
                                         ? updatedLead
                                         : l
-                                    )
-                                  );
-                                  setFilteredLeads(prevFiltered => 
-                                    prevFiltered.map(l => 
-                                      l._id === lead._id 
-                                        ? updatedLead
-                                        : l
-                                    )
-                                  );
+                                    );
+                                    // Update filtered leads to immediately remove the scheduled call
+                                    updateFilteredLeads(newLeads);
+                                    return newLeads;
+                                  });
                                   alert(`Call scheduled for ${new Date(scheduledAt).toLocaleString()}!`);
                                 } else {
                                   alert('Failed to schedule call');
