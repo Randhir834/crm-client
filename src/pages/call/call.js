@@ -12,7 +12,52 @@ const Call = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // User filter state
+  const [users, setUsers] = useState([]);
+  const [selectedUserFilter, setSelectedUserFilter] = useState('');
+  const [filteredLeads, setFilteredLeads] = useState([]);
 
+  // Fetch users for the filter dropdown
+  const fetchUsers = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(getApiUrl('api/auth/users/list'), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      } else {
+        console.error('Failed to fetch users:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  }, []);
+
+  // Memoized function to update filtered leads
+  const updateFilteredLeads = useCallback((leadsData) => {
+    if (selectedUserFilter) {
+      // Filter leads by selected user
+      const filtered = leadsData.filter(lead => 
+        lead.assignedTo && 
+        (lead.assignedTo._id === selectedUserFilter || lead.assignedTo === selectedUserFilter)
+      );
+      setFilteredLeads(filtered);
+    } else {
+      // Show all leads (no filtering)
+      setFilteredLeads(leadsData);
+    }
+  }, [selectedUserFilter]);
+
+  // Effect to update filtered leads when filter changes
+  useEffect(() => {
+    updateFilteredLeads(leads);
+  }, [selectedUserFilter, leads, updateFilteredLeads]);
 
   // Fetch leads from API
   const fetchLeads = useCallback(async () => {
@@ -32,6 +77,7 @@ const Call = () => {
         const data = await response.json();
         const leadsData = data.leads || [];
         setLeads(leadsData);
+        updateFilteredLeads(leadsData);
       } else {
         setError('Failed to fetch leads');
         console.error('Failed to fetch leads:', response.status, response.statusText);
@@ -42,11 +88,12 @@ const Call = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updateFilteredLeads]);
 
   useEffect(() => {
     fetchLeads();
-  }, [fetchLeads]);
+    fetchUsers();
+  }, [fetchLeads, fetchUsers]);
 
 
 
@@ -121,22 +168,56 @@ const Call = () => {
             <p>Manage your leads, make calls, and view completed calls</p>
           </div>
           <div className="header-controls">
+            {/* User Filter Dropdown */}
+            <div className="user-filter-container">
+              <select
+                className="user-filter-select"
+                value={selectedUserFilter}
+                onChange={(e) => setSelectedUserFilter(e.target.value)}
+              >
+                <option value="">All Users</option>
+                {users.map((user) => (
+                  <option key={user._id} value={user._id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="leads-count">
               <span className="count-text">Total Calls</span>
-              <span className="count-badge">{leads.length}</span>
+              <span className="count-badge">
+                {selectedUserFilter ? `${filteredLeads.length}/${leads.length}` : leads.length}
+              </span>
             </div>
           </div>
         </div>
 
-        {leads.length === 0 ? (
+
+
+        {filteredLeads.length === 0 ? (
           <div className="no-leads">
             <div className="no-leads-icon"></div>
-            <h3>No leads available</h3>
-            <p>Upload leads from the Leads page to get started, or complete some calls to see them here</p>
+            <h3>{selectedUserFilter ? 'No leads found for selected user' : 'No leads available'}</h3>
+            <p>
+              {selectedUserFilter ? (
+                <>
+                  No leads found for <strong>{users.find(u => u._id === selectedUserFilter)?.name || 'selected user'}</strong>.
+                  <br />
+                  <button 
+                    className="clear-filter-link"
+                    onClick={() => setSelectedUserFilter('')}
+                  >
+                    Clear filter to see all leads
+                  </button>
+                </>
+              ) : (
+                'Upload leads from the Leads page to get started, or complete some calls to see them here'
+              )}
+            </p>
           </div>
         ) : (
           <div className="leads-grid">
-            {leads.map((lead) => (
+            {filteredLeads.map((lead) => (
               <div key={lead._id} className="lead-card">
                 <div className="lead-header">
                   <div className="lead-name">
@@ -164,8 +245,9 @@ const Call = () => {
                             });
 
                             if (response.ok) {
-                              // Remove the lead from the current list
+                              // Remove the lead from both lists
                               setLeads(prevLeads => prevLeads.filter(l => l._id !== lead._id));
+                              setFilteredLeads(prevFiltered => prevFiltered.filter(l => l._id !== lead._id));
                               alert('Lead deleted successfully!');
                             } else {
                               alert('Failed to delete lead');
@@ -206,11 +288,19 @@ const Call = () => {
                         placeholder="Write your points here..."
                         value={lead.points || ''}
                         onChange={(e) => {
-                          // Update the local state immediately for responsive UI
+                          // Update both states immediately for responsive UI
+                          const updatedLead = { ...lead, points: e.target.value };
                           setLeads(prevLeads => 
                             prevLeads.map(l => 
                               l._id === lead._id 
-                                ? { ...l, points: e.target.value }
+                                ? updatedLead
+                                : l
+                            )
+                          );
+                          setFilteredLeads(prevFiltered => 
+                            prevFiltered.map(l => 
+                              l._id === lead._id 
+                                ? updatedLead
                                 : l
                             )
                           );
@@ -296,16 +386,24 @@ const Call = () => {
                         });
 
                         if (response.ok) {
-                          // Update the lead in the current list to show it as completed
+                          // Update the lead in both lists to show it as completed
+                          const updatedLead = { 
+                            ...lead, 
+                            callCompleted: true, 
+                            callCompletedAt: new Date().toISOString(),
+                            callCompletedBy: lead.assignedTo?._id || lead.createdBy?._id
+                          };
                           setLeads(prevLeads => 
                             prevLeads.map(l => 
                               l._id === lead._id 
-                                ? { 
-                                    ...l, 
-                                    callCompleted: true, 
-                                    callCompletedAt: new Date().toISOString(),
-                                    callCompletedBy: l.assignedTo?._id || l.createdBy?._id
-                                  }
+                                ? updatedLead
+                                : l
+                            )
+                          );
+                          setFilteredLeads(prevFiltered => 
+                            prevFiltered.map(l => 
+                              l._id === lead._id 
+                                ? updatedLead
                                 : l
                             )
                           );
@@ -340,10 +438,14 @@ const Call = () => {
 
                         if (response.ok) {
                           // Move the lead to the end of the queue after marking as not connected
+                          const updatedLead = { ...lead, notConnectedAt: new Date().toISOString() };
                           setLeads(prevLeads => {
-                            const updatedLead = { ...lead, notConnectedAt: new Date().toISOString() };
                             const otherLeads = prevLeads.filter(l => l._id !== lead._id);
                             return [...otherLeads, updatedLead];
+                          });
+                          setFilteredLeads(prevFiltered => {
+                            const otherFiltered = prevFiltered.filter(l => l._id !== lead._id);
+                            return [...otherFiltered, updatedLead];
                           });
                           // Show success message
                           alert('Call marked as not connected and moved to end of queue!');
@@ -362,10 +464,18 @@ const Call = () => {
                     className="action-button schedule-button"
                     onClick={() => {
                       // Toggle the schedule picker visibility
+                      const updatedLead = { ...lead, showSchedulePicker: !lead.showSchedulePicker };
                       setLeads(prevLeads => 
                         prevLeads.map(l => 
                           l._id === lead._id 
-                            ? { ...l, showSchedulePicker: !l.showSchedulePicker }
+                            ? updatedLead
+                            : { ...l, showSchedulePicker: false }
+                        )
+                      );
+                      setFilteredLeads(prevFiltered => 
+                        prevFiltered.map(l => 
+                          l._id === lead._id 
+                            ? updatedLead
                             : { ...l, showSchedulePicker: false }
                         )
                       );
@@ -383,10 +493,18 @@ const Call = () => {
                       <button 
                         className="close-picker-btn"
                         onClick={() => {
+                          const updatedLead = { ...lead, showSchedulePicker: false };
                           setLeads(prevLeads => 
                             prevLeads.map(l => 
                               l._id === lead._id 
-                                ? { ...l, showSchedulePicker: false }
+                                ? updatedLead
+                                : l
+                            )
+                          );
+                          setFilteredLeads(prevFiltered => 
+                            prevFiltered.map(l => 
+                              l._id === lead._id 
+                                ? updatedLead
                                 : l
                             )
                           );
@@ -401,10 +519,18 @@ const Call = () => {
                         className="schedule-datetime-input"
                         min={new Date().toISOString().slice(0, 16)}
                         onChange={(e) => {
+                          const updatedLead = { ...lead, tempScheduledAt: e.target.value };
                           setLeads(prevLeads => 
                             prevLeads.map(l => 
                               l._id === lead._id 
-                                ? { ...l, tempScheduledAt: e.target.value }
+                                ? updatedLead
+                                : l
+                            )
+                          );
+                          setFilteredLeads(prevFiltered => 
+                            prevFiltered.map(l => 
+                              l._id === lead._id 
+                                ? updatedLead
                                 : l
                             )
                           );
@@ -430,11 +556,19 @@ const Call = () => {
                                 });
 
                                 if (response.ok) {
-                                  // Update the lead in the current list to show it as scheduled
+                                  // Update the lead in both lists to show it as scheduled
+                                  const updatedLead = { ...lead, scheduledAt: new Date(scheduledAt).toISOString() };
                                   setLeads(prevLeads => 
                                     prevLeads.map(l => 
                                       l._id === lead._id 
-                                        ? { ...l, scheduledAt: new Date(scheduledAt).toISOString() }
+                                        ? updatedLead
+                                        : l
+                                    )
+                                  );
+                                  setFilteredLeads(prevFiltered => 
+                                    prevFiltered.map(l => 
+                                      l._id === lead._id 
+                                        ? updatedLead
                                         : l
                                     )
                                   );
@@ -456,10 +590,18 @@ const Call = () => {
                         <button 
                           className="cancel-schedule-btn"
                           onClick={() => {
+                            const updatedLead = { ...lead, showSchedulePicker: false, tempScheduledAt: null };
                             setLeads(prevLeads => 
                               prevLeads.map(l => 
                                 l._id === lead._id 
-                                  ? { ...l, showSchedulePicker: false, tempScheduledAt: null }
+                                  ? updatedLead
+                                  : l
+                              )
+                            );
+                            setFilteredLeads(prevFiltered => 
+                              prevFiltered.map(l => 
+                                l._id === lead._id 
+                                  ? updatedLead
                                   : l
                               )
                             );

@@ -183,6 +183,26 @@
   transform: scale(0.95);
 }
 
+
+
+.clear-filter-link {
+  background: none;
+  border: none;
+  color: #8b5cf6;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: var(--spacing-xs);
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.clear-filter-link:hover {
+  color: #7c3aed;
+  text-decoration: none;
+}
+
 .leads-count {
   display: flex;
   flex-direction: row;
@@ -240,6 +260,8 @@
   .leads-count {
     align-self: center;
   }
+  
+
 }
 
 .leads-info-box {
